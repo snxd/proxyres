@@ -1,6 +1,6 @@
 # proxyres - proxy resolution library in C
 
-[![CodeFactor](https://www.codefactor.io/repository/github/nmoinvaz/proxyres/badge)](https://www.codefactor.io/repository/github/nmoinvaz/proxyres) [![codecov](https://codecov.io/gh/nmoinvaz/proxyres/branch/master/graph/badge.svg?token=aBv603YArh)](https://codecov.io/gh/nmoinvaz/proxyres) [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/nmoinvaz/proxyres/blob/master/LICENSE.md)
+[![CodeFactor](https://www.codefactor.io/repository/github/snxd/proxyres/badge)](https://www.codefactor.io/repository/github/snxd/proxyres) [![codecov](https://codecov.io/gh/snxd/proxyres/branch/master/graph/badge.svg?token=aBv603YArh)](https://codecov.io/gh/snxd/proxyres) [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/snxd/proxyres/blob/master/LICENSE.md)
 
 Cross-platform proxy resolution with support for Linux, macOS, & Windows.
 
