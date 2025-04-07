@@ -20,3 +20,7 @@ AllowShortCaseLabelsOnASingleLine: true
 ContinuationIndentWidth: 2
 IndentWidth: 2
 JavaScriptQuotes: Double
+---
+Language: Json
+IndentWidth: 2
+UseTab: Never
