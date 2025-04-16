@@ -5,7 +5,10 @@
 
 #include "execute.h"
 #include "execute_i.h"
-#ifdef _WIN32
+
+#ifdef HAVE_DUKTAPE
+#  include "execute_duktape.h"
+#elif defined(WIN32)
 #  if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
 #    include "execute_wsh.h"
 #  endif
@@ -67,7 +70,10 @@ bool proxy_execute_global_init(void) {
         return true;
     }
     memset(&g_proxy_execute, 0, sizeof(g_proxy_execute));
-#ifdef _WIN32
+#ifdef HAVE_DUKTAPE
+    if (proxy_execute_duktape_global_init())
+        g_proxy_execute.proxy_execute_i = proxy_execute_duktape_get_interface();
+#elif defined(_WIN32)
 #  if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
     if (proxy_execute_wsh_global_init())
         g_proxy_execute.proxy_execute_i = proxy_execute_wsh_get_interface();

@@ -3,9 +3,11 @@ cmake_minimum_required(VERSION 3.12)
 include(CheckIncludeFile)
 
 option(PROXYRES_CURL "Enable support for downloading PAC scripts using curl." OFF)
+option(PROXYRES_DUKTAPE "Use embedded Duktape JavaScript engine." OFF)
 option(PROXYRES_EXECUTE "Enable support for PAC script execution." ON)
 
 option(PROXYRES_USE_CXX "Use the C++ compiler to compile proxyres." OFF)
+
 option(PROXYRES_BUILD_CLI "Build command line utility." ON)
 option(PROXYRES_BUILD_TESTS "Build Googletest unit tests project." ON)
 
@@ -92,7 +94,7 @@ if(WIN32)
         list(APPEND PROXYRES_SRCS
             resolver_win8.c
             resolver_winxp.c)
-        if(PROXYRES_EXECUTE)
+        if(PROXYRES_EXECUTE AND NOT PROXYRES_DUKTAPE)
             list(APPEND PROXYRES_HDRS
                 execute_wsh_dispatch.h
                 execute_wsh_site.h
@@ -121,26 +123,31 @@ elseif(APPLE)
         threadpool_pthread.c)
     if(PROXYRES_EXECUTE)
         list(APPEND PROXYRES_HDRS
-            execute_jscore.h
             wpad_dhcp_mac.h)
         list(APPEND PROXYRES_SRCS
-            execute_jscore.c
             net_adapter_mac.c
             wpad_dhcp_mac.c)
+        if(NOT PROXYRES_DUKTAPE)
+            list(APPEND PROXYRES_HDRS
+                execute_jscore.h)
+            list(APPEND PROXYRES_SRCS
+                execute_jscore.c)
+        endif()
     endif()
 elseif(UNIX)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GConf gconf-2.0)
-    if (GConf_FOUND)
-        list(APPEND PROXYRES_HDRS config_gnome2.h)
-        list(APPEND PROXYRES_SRCS config_gnome2.c)
+    find_package(PkgConfig)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(GConf gconf-2.0)
+        if (GConf_FOUND)
+            list(APPEND PROXYRES_HDRS config_gnome2.h)
+            list(APPEND PROXYRES_SRCS config_gnome2.c)
+        endif()
     endif()
 
     list(APPEND PROXYRES_HDRS
         config_env.h
         config_gnome3.h
         config_kde.h
-        execute_jsc.h
         resolver_gnome3.h
         util_linux.h)
     list(APPEND PROXYRES_SRCS
@@ -148,12 +155,22 @@ elseif(UNIX)
         config_gnome3.c
         config_kde.c
         event_pthread.c
-        execute_jsc.c
         mutex_pthread.c
         net_adapter_linux.c
         resolver_gnome3.c
         threadpool_pthread.c
         util_linux.c)
+    if(PROXYRES_DUKTAPE)
+        list(APPEND PROXYRES_HDRS
+            execute_duktape.h)
+        list(APPEND PROXYRES_SRCS
+            execute_duktape.c)
+    else()
+        list(APPEND PROXYRES_HDRS
+            execute_jsc.h)
+        list(APPEND PROXYRES_SRCS
+            execute_jsc.c)
+    endif()
 endif()
 
 if(WIN32)
@@ -295,6 +312,31 @@ if(PROXYRES_EXECUTE)
     endif()
 endif()
 
+if(PROXYRES_DUKTAPE)
+    include(FetchContent)
+
+    message("Fetching Duktape JavaScript engine")
+    FetchContent_Declare(duktape
+        URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz)
+    FetchContent_MakeAvailable(duktape)
+
+    add_library(duktape STATIC
+        ${duktape_SOURCE_DIR}/src/duktape.c
+        ${duktape_SOURCE_DIR}/src/duktape.h
+        ${duktape_SOURCE_DIR}/src/duk_config.h)
+    target_include_directories(duktape PUBLIC ${duktape_SOURCE_DIR}/src)
+    if(UNIX)
+        target_link_libraries(duktape m)
+    endif()
+
+    target_include_directories(proxyres PRIVATE ${duktape_SOURCE_DIR}/src)
+    target_compile_definitions(proxyres PRIVATE HAVE_DUKTAPE)
+    target_link_libraries(proxyres duktape)
+    target_sources(proxyres PRIVATE
+        execute_duktape.h
+        execute_duktape.c)
+endif()
+
 if(WIN32)
     target_link_libraries(proxyres dhcpcsvc.lib iphlpapi.lib wininet winhttp ws2_32)
 elseif(APPLE)
@@ -324,16 +366,18 @@ elseif(UNIX)
         target_compile_definitions(proxyres PRIVATE HAVE_GCONF)
     endif()
 
-    pkg_search_module(JSCoreGTK REQUIRED javascriptcoregtk-6.0 javascriptcoregtk-4.1 javascriptcoregtk-4.0)
-    if(JSCoreGTK_FOUND)
-        # Don't link libraries at compile time since we dynamically load them at runtime
-        target_include_directories(proxyres PRIVATE ${JSCoreGTK_INCLUDE_DIRS})
-        target_compile_definitions(proxyres PRIVATE HAVE_JSC)
+    if(NOT PROXYRES_DUKTAPE)
+        pkg_search_module(JSCoreGTK javascriptcoregtk-6.0 javascriptcoregtk-4.1 javascriptcoregtk-4.0)
+        if(JSCoreGTK_FOUND)
+            # Don't link libraries at compile time since we dynamically load them at runtime
+            target_include_directories(proxyres PRIVATE ${JSCoreGTK_INCLUDE_DIRS})
+            target_compile_definitions(proxyres PRIVATE HAVE_JSC)
 
-        pkg_check_modules(GObject REQUIRED gobject-2.0)
-        if(GObject_FOUND)
-            target_include_directories(proxyres PRIVATE ${GObject_INCLUDE_DIRS})
-            target_link_libraries(proxyres ${GObject_LIBRARIES})
+            pkg_check_modules(GObject REQUIRED gobject-2.0)
+            if(GObject_FOUND)
+                target_include_directories(proxyres PRIVATE ${GObject_INCLUDE_DIRS})
+                target_link_libraries(proxyres ${GObject_LIBRARIES})
+            endif()
         endif()
     endif()
 
