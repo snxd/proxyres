@@ -14,14 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Build - Ubuntu 20 Clang
-            runs-on: ubuntu-20.04
-            compiler: clang
-            cxx-compiler: clang++
-            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON
-            packages: llvm-12 libjavascriptcoregtk-4.0-dev libgconf2-dev
-            gcov-exec: llvm-cov-12 gcov
-            codecov: ubuntu
+          # - name: Build - Ubuntu 20 Clang
+          #   runs-on: ubuntu-20.04
+          #   compiler: clang
+          #   cxx-compiler: clang++
+          #   cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON
+          #   packages: llvm-12 libjavascriptcoregtk-4.0-dev libgconf2-dev
+          #   gcov-exec: llvm-cov-12 gcov
+          #   codecov: ubuntu
 
           - name: Build - Ubuntu 22 Clang
             runs-on: ubuntu-22.04
