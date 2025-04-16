@@ -50,6 +50,15 @@ jobs:
             gcov-exec: llvm-cov-15 gcov
             codecov: ubuntu_curl
 
+          - name: Build - Ubuntu Clang (duktape)
+            runs-on: ubuntu-latest
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
+            packages: llvm-15 libglib2.0-dev gsettings-desktop-schemas
+            gcov-exec: llvm-cov-15 gcov
+            codecov: ubuntu_duktape
+
     steps:
     - name: Install dependencies
       run: |
