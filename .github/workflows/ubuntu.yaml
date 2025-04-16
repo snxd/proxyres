@@ -288,6 +288,7 @@ jobs:
         python3 -m gcovr \
           --exclude-unreachable-branches \
           --gcov-ignore-parse-errors \
+          --gcov-ignore-errors=no_working_dir_found \
           --gcov-executable "${{ matrix.gcov-exec || 'gcov' }}" \
           --root . \
           --xml \
