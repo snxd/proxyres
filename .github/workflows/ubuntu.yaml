@@ -97,6 +97,10 @@ jobs:
         sleep 15
       working-directory: test
 
+    - name: Run tests
+      run: ctest --verbose -C RelWithDebInfo -E ".*wpad.*"
+      working-directory: build
+
     - name: Run test dhcp server
       # Used by wpad.dhcp googletest
       run: |
@@ -104,15 +108,17 @@ jobs:
         sleep 15
       working-directory: test
 
-    # Run as sudo to be able to bind to DHCP client port, then reset
-    # permissions to code coverage files if necessary
-    - name: Run tests
-      run: |
-        sudo ctest --verbose -C RelWithDebInfo
-        sudo chmod -R a+rw .
+    # Run as sudo to be able to bind to DHCP client port
+    - name: Run wpad tests
+      run: sudo ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
       working-directory: build
       env:
         WPAD: true
+
+    # Reset permissions to code coverage files if necessary
+    - name: Reset coverage file permissions
+      run: sudo chmod -R a+rw .
+      working-directory: build
 
     - name: Download pac from http server
       run: curl -v http://127.0.0.1:8080/pac.js

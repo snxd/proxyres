@@ -83,6 +83,10 @@ jobs:
         sleep 15
       working-directory: test
 
+    - name: Run tests
+      run: ctest --verbose -C RelWithDebInfo -E ".*wpad.*"
+      working-directory: build
+
     - name: Run test dhcp server
       # Used by wpad.dhcp googletest
       run: |
@@ -90,8 +94,8 @@ jobs:
         sleep 15
       working-directory: test
 
-    - name: Run tests
-      run: ctest --verbose -C RelWithDebInfo
+    - name: Run wpad tests
+      run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
       working-directory: build
       env:
         WPAD: true
