@@ -316,8 +316,12 @@ if(PROXYRES_DUKTAPE)
     include(FetchContent)
 
     message("Fetching Duktape JavaScript engine")
-    FetchContent_Declare(duktape
-        URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz)
+
+    # Only Duktape releases have single-file source distributables
+    if(NOT DEFINED DUKTAPE_SOURCE_URL)
+        set(DUKTAPE_SOURCE_URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz)
+    endif()
+    FetchContent_Declare(duktape URL ${DUKTAPE_SOURCE_URL})
     FetchContent_MakeAvailable(duktape)
 
     add_library(duktape STATIC
@@ -360,7 +364,7 @@ elseif(UNIX)
     pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
     target_link_libraries(proxyres PkgConfig::deps)
 
-    if (GConf_FOUND)
+    if(GConf_FOUND)
         # Don't link libraries at compile time since we dynamically load them at runtime
         target_include_directories(proxyres PRIVATE ${GConf_INCLUDE_DIRS})
         target_compile_definitions(proxyres PRIVATE HAVE_GCONF)
