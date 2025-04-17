@@ -89,24 +89,28 @@ if(WIN32)
             wpad_dhcp_win.c)
     endif()
     if(CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
-        list(APPEND PROXYRES_HDRS
-            resolver_winrt.h)
-        list(APPEND PROXYRES_C_SRCS
-            resolver_winrt.c)
-    else()
-        list(APPEND PROXYRES_HDRS
-            resolver_win8.h
-            resolver_winxp.h)
-        list(APPEND PROXYRES_SRCS
-            resolver_win8.c
-            resolver_winxp.c)
-        if(PROXYRES_EXECUTE AND NOT PROXYRES_DUKTAPE)
+        if(NOT PROXYRES_DUKTAPE)
             list(APPEND PROXYRES_HDRS
-                execute_wsh_dispatch.h
-                execute_wsh_site.h
-                execute_wsh.h)
+                resolver_winrt.h)
             list(APPEND PROXYRES_C_SRCS
-                execute_wsh.c)
+                resolver_winrt.c)
+        endif()
+    else()
+        if(NOT PROXYRES_DUKTAPE)
+            list(APPEND PROXYRES_HDRS
+                resolver_win8.h
+                resolver_winxp.h)
+            list(APPEND PROXYRES_SRCS
+                resolver_win8.c
+                resolver_winxp.c)
+            if(PROXYRES_EXECUTE)
+                list(APPEND PROXYRES_HDRS
+                    execute_wsh_dispatch.h
+                    execute_wsh_site.h
+                    execute_wsh.h)
+                list(APPEND PROXYRES_C_SRCS
+                    execute_wsh.c)
+            endif()
         endif()
     endif()
 
@@ -119,8 +123,7 @@ if(WIN32)
     endif()
 elseif(APPLE)
     list(APPEND PROXYRES_HDRS
-        config_mac.h
-        resolver_mac.h)
+        config_mac.h)
     list(APPEND PROXYRES_SRCS
         config_mac.c
         event_pthread.c
@@ -138,6 +141,11 @@ elseif(APPLE)
             list(APPEND PROXYRES_SRCS
                 execute_jscore.c)
         endif()
+    elseif(NOT PROXYRES_DUKTAPE)
+        list(APPEND PROXYRES_HDRS
+            resolver_mac.h)
+        list(APPEND PROXYRES_SRCS
+            resolver_mac.c)
     endif()
 elseif(UNIX)
     find_package(PkgConfig)
