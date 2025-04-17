@@ -21,6 +21,13 @@ jobs:
             cmake-args: -G Xcode -D PROXYRES_CODE_COVERAGE=ON
             codecov: macos
 
+          - name: Build - macOS Xcode (duktape)
+            runs-on: macos-latest
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Xcode -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
+            codecov: macos_duktape
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4

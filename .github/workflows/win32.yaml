@@ -29,6 +29,14 @@ jobs:
             codecov: windows
             binary-dir: build/test
 
+          - name: Build - Windows GCC (duktape)
+            runs-on: windows-latest
+            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
+            compiler: gcc
+            cxx-compiler: g++
+            codecov: windows_duktape
+            binary-dir: build/test
+
     steps:
     - name: Install dependencies
       run: choco install curl
