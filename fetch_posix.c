@@ -134,7 +134,7 @@ char *fetch_get(const char *url, int32_t *error) {
     const size_t content_length = strtoul(content_length_header + 16, NULL, 0);
     if (content_length <= 0 || content_length >= SCRIPT_MAX) {
         err = EIO;
-        LOG_ERROR("Invalid Content-Length header (%" PRId32 ")\n", err);
+        LOG_ERROR("Invalid Content-Length header (%" PRId64 "/%" PRId32 ")\n", content_length, err);
         goto download_cleanup;
     }
 
