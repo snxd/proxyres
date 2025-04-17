@@ -13,9 +13,15 @@ option(PROXYRES_BUILD_TESTS "Build Googletest unit tests project." ON)
 
 option(PROXYRES_CODE_COVERAGE "Build for code coverage." OFF)
 
-if(UNIX AND NOT APPLE AND NOT PROXYRES_EXECUTE)
-    message(STATUS "PAC script execution enabled on linux")
-    set(PROXYRES_EXECUTE ON)
+if(NOT PROXYRES_EXECUTE)
+    if(UNIX AND NOT APPLE)
+        message(STATUS "PAC script execution enabled on linux")
+        set(PROXYRES_EXECUTE ON)
+    endif()
+    if(PROXYRES_DUKTAPE)
+        message(STATUS "Duktape engine requires PAC script execution")
+        set(PROXYRES_EXECUTE ON)
+    endif()
 endif()
 
 project(proxyres C CXX)
@@ -141,7 +147,8 @@ elseif(APPLE)
             list(APPEND PROXYRES_SRCS
                 execute_jscore.c)
         endif()
-    elseif(NOT PROXYRES_DUKTAPE)
+    endif()
+    if(NOT PROXYRES_DUKTAPE)
         list(APPEND PROXYRES_HDRS
             resolver_mac.h)
         list(APPEND PROXYRES_SRCS
@@ -161,7 +168,6 @@ elseif(UNIX)
         config_env.h
         config_gnome3.h
         config_kde.h
-        resolver_gnome3.h
         util_linux.h)
     list(APPEND PROXYRES_SRCS
         config_env.c
@@ -170,14 +176,15 @@ elseif(UNIX)
         event_pthread.c
         mutex_pthread.c
         net_adapter_linux.c
-        resolver_gnome3.c
         threadpool_pthread.c
         util_linux.c)
     if(NOT PROXYRES_DUKTAPE)
         list(APPEND PROXYRES_HDRS
-            execute_jsc.h)
+            execute_jsc.h
+            resolver_gnome3.h)
         list(APPEND PROXYRES_SRCS
-            execute_jsc.c)
+            execute_jsc.c
+            resolver_gnome3.c)
     endif()
 endif()
 
