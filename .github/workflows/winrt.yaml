@@ -18,6 +18,10 @@ jobs:
             runs-on: windows-latest
             cmake-args: -D CMAKE_SYSTEM_NAME=WindowsStore -D CMAKE_SYSTEM_VERSION=10.0
 
+          - name: Build - Windows Store (duktape)
+            runs-on: windows-latest
+            cmake-args: -D CMAKE_SYSTEM_NAME=WindowsStore -D CMAKE_SYSTEM_VERSION=10.0 -D PROXYRES_DUKTAPE=ON
+
     steps:
     - name: Install dependencies
       run: choco install curl
