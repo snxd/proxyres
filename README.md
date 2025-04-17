@@ -9,7 +9,7 @@ Cross-platform proxy resolution with support for Linux, macOS, & Windows.
 ## Features
 
 * Read the user's proxy configuration from the operating system.
-* Execute a PAC script using `JavaScriptCore` or `Windows Script Host` or `Duktape`.
+* Execute a PAC script using `JavaScriptCore`, `JavaScriptCoreGTK`, `Windows Script Host` or `Duktape`.
 * Get the proxies for a URL asynchronously using `WinHTTP`, `ProxyConfiguration`, and `CFNetwork`.
   * Or with a fallback proxy resolver featuring:
     * Support for `WPAD` using `DHCP` and `DNS`.
