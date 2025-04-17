@@ -65,6 +65,12 @@ if(PROXYRES_EXECUTE)
         wpad_dhcp_posix.c
         wpad_dhcp.c
         wpad_dns.c)
+    if(PROXYRES_DUKTAPE)
+        list(APPEND PROXYRES_HDRS
+            execute_duktape.h)
+        list(APPEND PROXYRES_SRCS
+            execute_duktape.c)
+    endif()
 endif()
 if(WIN32)
     list(APPEND PROXYRES_HDRS
@@ -119,7 +125,6 @@ elseif(APPLE)
         config_mac.c
         event_pthread.c
         mutex_pthread.c
-        resolver_mac.c
         threadpool_pthread.c)
     if(PROXYRES_EXECUTE)
         list(APPEND PROXYRES_HDRS
@@ -160,12 +165,7 @@ elseif(UNIX)
         resolver_gnome3.c
         threadpool_pthread.c
         util_linux.c)
-    if(PROXYRES_DUKTAPE)
-        list(APPEND PROXYRES_HDRS
-            execute_duktape.h)
-        list(APPEND PROXYRES_SRCS
-            execute_duktape.c)
-    else()
+    if(NOT PROXYRES_DUKTAPE)
         list(APPEND PROXYRES_HDRS
             execute_jsc.h)
         list(APPEND PROXYRES_SRCS
