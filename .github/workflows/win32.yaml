@@ -97,8 +97,6 @@ jobs:
     - name: Run wpad tests
       run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
       working-directory: build
-      env:
-        WPAD: true
 
     - name: Download pac from http server
       run: curl -v http://127.0.0.1:8080/pac.js
