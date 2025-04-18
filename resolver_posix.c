@@ -266,7 +266,7 @@ bool proxy_resolver_posix_init_ex(void *threadpool) {
     if (!g_proxy_resolver_posix.mutex)
         return false;
 
-    if (!fetch_global_init() || !proxy_execute_global_init())
+    if (!fetch_global_init())
         return proxy_resolver_posix_global_cleanup();
 
     // Start WPAD discovery process immediately
@@ -282,7 +282,6 @@ bool proxy_resolver_posix_global_cleanup(void) {
     mutex_delete(&g_proxy_resolver_posix.mutex);
 
     fetch_global_cleanup();
-    proxy_execute_global_cleanup();
 
     memset(&g_proxy_resolver_posix, 0, sizeof(g_proxy_resolver_posix));
     return true;

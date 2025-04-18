@@ -12,6 +12,9 @@
 #endif
 
 #include "config.h"
+#if defined(__linux__) || defined(HAVE_DUKTAPE)
+#  include "execute.h"
+#endif
 #include "log.h"
 #include "resolver.h"
 #include "resolver_i.h"
@@ -22,7 +25,7 @@
 #    include "resolver_mac.h"
 #  endif
 #elif defined(__linux__)
-//#  include "resolver_gnome3.h"
+// #  include "resolver_gnome3.h"
 #  ifdef PROXYRES_EXECUTE
 #    include "resolver_posix.h"
 #  endif
@@ -257,7 +260,7 @@ bool proxy_resolver_global_init(void) {
         return false;
 #if defined(__APPLE__)
 #  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
-    if (!g_proxy_resolver.proxy_resolver_i)
+    if (proxy_execute_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
 #  else
     if (proxy_resolver_mac_global_init())
@@ -268,12 +271,12 @@ bool proxy_resolver_global_init(void) {
     if (proxy_resolver_gnome3_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_gnome3_get_interface();*/
 #  ifdef PROXYRES_EXECUTE
-    if (!g_proxy_resolver.proxy_resolver_i)
+    if (proxy_execute_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
 #  endif
 #elif defined(_WIN32)
 #  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
-    if (!g_proxy_resolver.proxy_resolver_i)
+    if (proxy_execute_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
 #  elif WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
     if (proxy_resolver_win8_global_init())
@@ -331,7 +334,10 @@ bool proxy_resolver_global_cleanup(void) {
         g_proxy_resolver.proxy_resolver_i->global_cleanup();
 
     memset(&g_proxy_resolver, 0, sizeof(g_proxy_resolver));
-
+#ifdef HAVE_DUKTAPE
+    if (!proxy_execute_global_cleanup())
+        return false;
+#endif
     if (!proxy_config_global_cleanup())
         return false;
 
