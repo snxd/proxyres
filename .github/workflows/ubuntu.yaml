@@ -176,7 +176,7 @@ jobs:
         fi
         out=$(./proxycli resolve https://simple.com/)
         echo "Proxy for https://simple.com/: $out"
-        if [ "$out" = "https://no-such-proxy:80" ]; then
+        if [ "$out" = "http://no-such-proxy:80" ]; then
           echo "Proxy for https://simple.com/ set successfully"
         else
           echo "Proxy for https://simple.com/ set failed"

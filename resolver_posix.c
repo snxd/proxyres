@@ -118,7 +118,6 @@ bool proxy_resolver_posix_get_proxies_for_url(void *ctx, const char *url) {
     char *auto_config_url = NULL;
     char *proxy = NULL;
     char *script = NULL;
-    char *scheme = NULL;
     bool locked = false;
     bool is_ok = false;
 
@@ -154,20 +153,10 @@ bool proxy_resolver_posix_get_proxies_for_url(void *ctx, const char *url) {
             goto posix_done;
         }
 
-        // Get return value from FindProxyForURL
+        // Get return value from FindProxyForURL and convert to uri list. We use default http
+        // scheme if PROXY is returned.
         const char *list = proxy_execute_get_list(proxy_execute);
-
-        // Use scheme associated with the URL when determining proxy
-        scheme = get_url_scheme(url, "http");
-        if (!scheme) {
-            proxy_resolver->error = ENOMEM;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "scheme", proxy_resolver->error);
-            goto posix_done;
-        }
-
-        // Convert return value from FindProxyForURL to uri list. We use the default
-        // scheme corresponding to the protocol of the original request.
-        proxy_resolver->list = convert_proxy_list_to_uri_list(list, scheme);
+        proxy_resolver->list = convert_proxy_list_to_uri_list(list, "http");
     } else {
         // Use DIRECT connection since WPAD didn't result in a proxy auto-configuration url
         proxy_resolver->list = strdup("direct://");
@@ -183,7 +172,6 @@ posix_done:
     is_ok = proxy_resolver->list != NULL;
     event_set(proxy_resolver->complete);
 
-    free(scheme);
     free(proxy);
     free(auto_config_url);
 
