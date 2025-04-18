@@ -112,8 +112,6 @@ jobs:
     - name: Run wpad tests
       run: sudo ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
       working-directory: build
-      env:
-        WPAD: true
 
     # Reset permissions to code coverage files if necessary
     - name: Reset coverage file permissions
