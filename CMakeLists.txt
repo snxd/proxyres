@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Need to use FetchContent_GetProperties for EXCLUDE_FROM_ALL
+if(POLICY CMP0169)
+    cmake_policy(SET CMP0169 OLD)
+endif()
+
 include(CheckIncludeFile)
 
 option(PROXYRES_CURL "Enable support for downloading PAC scripts using curl." OFF)
@@ -330,12 +335,11 @@ endif()
 if(PROXYRES_DUKTAPE)
     include(FetchContent)
 
-    message("Fetching Duktape JavaScript engine")
-
     # Only Duktape releases have single-file source distributables
     if(NOT DEFINED DUKTAPE_SOURCE_URL)
         set(DUKTAPE_SOURCE_URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz)
     endif()
+
     FetchContent_Declare(duktape URL ${DUKTAPE_SOURCE_URL})
     FetchContent_MakeAvailable(duktape)
 
