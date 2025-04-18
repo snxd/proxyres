@@ -114,6 +114,10 @@ jobs:
       run: sudo ctest --verbose -C RelWithDebInfo -R ".*wpad.*:-wpad.dhcp.*"
       working-directory: build
 
+    - name: Stop test dhcp server
+      run: npx pm2 stop dhcp_server_cmd
+      working-directory: test
+
     # Reset permissions to code coverage files if necessary
     - name: Reset coverage file permissions
       run: sudo chmod -R a+rw .

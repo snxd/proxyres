@@ -76,6 +76,10 @@ jobs:
       run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
       working-directory: build
 
+    - name: Stop test dhcp server
+      run: npx pm2 stop dhcp_server_cmd
+      working-directory: test
+
     - name: Download pac from http server
       run: curl -v http://127.0.0.1:8080/pac.js
       working-directory: test
