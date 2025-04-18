@@ -6,6 +6,7 @@ if(POLICY CMP0169)
 endif()
 
 include(CheckIncludeFile)
+include(FeatureSummary)
 
 option(PROXYRES_CURL "Enable support for downloading PAC scripts using curl." OFF)
 option(PROXYRES_DUKTAPE "Use embedded Duktape JavaScript engine." OFF)
@@ -240,7 +241,6 @@ if(PROXYRES_CODE_COVERAGE AND NOT MSVC)
 endif()
 
 if(PROXYRES_USE_CXX)
-    message(STATUS "Use the C++ compiler to compile (PROXYRES_USE_CXX=ON)")
     set_source_files_properties(${PROXYRES_SRCS} PROPERTIES LANGUAGE CXX)
     if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang")
         set(CMAKE_CXX_FLAGS "-Wno-deprecated ${CMAKE_CXX_FLAGS}")
@@ -417,3 +417,14 @@ if(PROXYRES_BUILD_CLI OR PROXYRES_BUILD_TESTS)
 
     add_subdirectory(test)
 endif()
+
+add_feature_info(PROXYRES_CURL PROXYRES_CURL "Enable support for downloading PAC scripts using curl.")
+add_feature_info(PROXYRES_DUKTAPE PROXYRES_DUKTAPE "Use embedded Duktape JavaScript engine.")
+add_feature_info(PROXYRES_EXECUTE PROXYRES_EXECUTE "Enable support for PAC script execution.")
+
+add_feature_info(PROXYRES_USE_CXX PROXYRES_USE_CXX "Use the C++ compiler to compile proxyres.")
+
+add_feature_info(PROXYRES_BUILD_CLI PROXYRES_BUILD_CLI "Build command line utility.")
+add_feature_info(PROXYRES_BUILD_TESTS PROXYRES_BUILD_TESTS "Build Googletest unit tests project.")
+
+feature_summary(WHAT ALL)
