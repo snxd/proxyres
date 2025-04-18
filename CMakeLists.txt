@@ -340,7 +340,7 @@ if(PROXYRES_DUKTAPE)
         set(DUKTAPE_SOURCE_URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz)
     endif()
 
-    FetchContent_Declare(duktape URL ${DUKTAPE_SOURCE_URL})
+    FetchContent_Declare(duktape URL ${DUKTAPE_SOURCE_URL} DOWNLOAD_EXTRACT_TIMESTAMP)
     FetchContent_MakeAvailable(duktape)
 
     add_library(duktape STATIC
