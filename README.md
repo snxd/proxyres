@@ -13,7 +13,7 @@ Cross-platform proxy resolution with support for Linux, macOS, & Windows.
 * Get the proxies for a URL asynchronously using `WinHTTP`, `ProxyConfiguration`, and `CFNetwork`.
   * Or with a fallback proxy resolver featuring:
     * Support for `WPAD` using `DHCP` and `DNS`.
-    * Support for PAC file execution using system scripting libraries.
+    * Support for PAC script execution using system scripting libraries or `Duktape`.
     * Support for downloading PAC scripts using HTTPS with [curl](https://github.com/curl/curl).
 * Handles multiple simultaneous resolution requests by utilizing a thread pool.
 * Example command line utility.
@@ -48,7 +48,7 @@ ctest --verbose -C Debug
 |Name|Description|Default|
 |:-|:-|:-:|
 |PROXYRES_CURL|Enables downloading PAC scripts using [curl](https://github.com/curl/curl). Without this option set, PAC scripts will only be downloaded using HTTP 1.0.|OFF|
-|PROXYRES_DUKTAPE|Build with Duktape JavaScript engine for WPAD evaluation.|OFF|
+|PROXYRES_DUKTAPE|Build with Duktape JavaScript engine for PAC script execution.|OFF|
 |PROXYRES_EXECUTE|Enables support for PAC script execution. Required on Linux due to the lack of a system level proxy resolver.|ON|
 |PROXYRES_BUILD_CLI|Build command line utility.|ON|
 |PROXYRES_BUILD_TESTS|Build Googletest unit tests project.|ON|
