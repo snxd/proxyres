@@ -296,6 +296,7 @@ jobs:
         python3 -u -m pip install --user gcovr
         python3 -m gcovr \
           --exclude-unreachable-branches \
+          --exclude-directories=build \
           --gcov-ignore-parse-errors \
           --gcov-ignore-errors=no_working_dir_found \
           --gcov-executable "${{ matrix.gcov-exec || 'gcov' }}" \
