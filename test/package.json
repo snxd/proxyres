@@ -7,7 +7,7 @@
   "dependencies": {
     "dhcp": "https://github.com/nmoinvaz/node-dhcp.git",
     "http-server": "^14.1.1",
-    "pm2": "^6.0.5"
+    "pm2": "^6.0.6"
   },
   "resolutions": {
     "chokidar": "^3.6.0",

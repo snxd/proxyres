@@ -189,6 +189,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ansis@npm:4.0.0":
+  version: 4.0.0
+  resolution: "ansis@npm:4.0.0"
+  checksum: 10c0/8e549bbf0e838dbaf2ba079a47c18a7955489bc2753d20b29b3dc436d87566a40de68b4b3dad848b2efd52a3a993f4e7ec9991009185ee6556a77ff755fef234
+  languageName: node
+  linkType: hard
+
 "anymatch@npm:~3.1.2":
   version: 3.1.2
   resolution: "anymatch@npm:3.1.2"
@@ -1682,17 +1689,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pm2@npm:^6.0.5":
-  version: 6.0.5
-  resolution: "pm2@npm:6.0.5"
+"pm2@npm:^6.0.6":
+  version: 6.0.6
+  resolution: "pm2@npm:6.0.6"
   dependencies:
     "@pm2/agent": "npm:~2.1.1"
     "@pm2/io": "npm:~6.1.0"
     "@pm2/js-api": "npm:~0.8.0"
     "@pm2/pm2-version-check": "npm:latest"
+    ansis: "npm:4.0.0"
     async: "npm:~3.2.6"
     blessed: "npm:0.1.81"
-    chalk: "npm:3.0.0"
     chokidar: "npm:^3.5.3"
     cli-tableau: "npm:^2.0.0"
     commander: "npm:2.15.1"
@@ -1724,7 +1731,7 @@ __metadata:
     pm2-dev: bin/pm2-dev
     pm2-docker: bin/pm2-docker
     pm2-runtime: bin/pm2-runtime
-  checksum: 10c0/a610f478a7914622fe5620512c9172b25dbe624616065806e8dda094145f66c5cdfa54fd241310e6e235ab04ab501976e2182ccacd99055f0f957345a3be34cb
+  checksum: 10c0/05aa3143a7dfc4be5d9d6bd08f3d7f38dd1e36b83c6776c9b3004ef8d4e098cc3b71144dbee969b626b292e2827097469af0138c671cdf545fa94c8f6cde3d0d
   languageName: node
   linkType: hard
 
@@ -1894,7 +1901,7 @@ __metadata:
   dependencies:
     dhcp: "https://github.com/nmoinvaz/node-dhcp.git"
     http-server: "npm:^14.1.1"
-    pm2: "npm:^6.0.5"
+    pm2: "npm:^6.0.6"
   languageName: unknown
   linkType: soft
 
