@@ -1,15 +1,27 @@
 #pragma once
 
-#define LOG_ERROR(fmt, ...) \
-  { printf("ERROR - "), printf(fmt, ##__VA_ARGS__); }
-#define LOG_WARN(fmt, ...) \
-  { printf("WARNING - "), printf(fmt, ##__VA_ARGS__); }
-#ifdef _DEBUG
-#  define LOG_INFO(fmt, ...) \
-    { printf("INFO - "), printf(fmt, ##__VA_ARGS__); }
-#  define LOG_DEBUG(fmt, ...) \
-    { printf("DEBUG - "), printf(fmt, ##__VA_ARGS__); }
-#else
-#  define LOG_INFO(fmt, ...)
-#  define LOG_DEBUG(fmt, ...)
+#include <stdarg.h>
+#include <stdio.h>
+
+void proxy_log_set_error_cb(void (*func)(const char *fmt, va_list args));
+void proxy_log_set_warn_cb(void (*func)(const char *fmt, va_list args));
+void proxy_log_set_info_cb(void (*func)(const char *fmt, va_list args));
+void proxy_log_set_debug_cb(void (*func)(const char *fmt, va_list args));
+
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+void log_error(const char *fmt, ...);
+void log_warn(const char *fmt, ...);
+void log_info(const char *fmt, ...);
+void log_debug(const char *fmt, ...);
+
+#ifdef __cplusplus
+}
+#endif
+
+#define LOG_ERROR log_error
+#define LOG_WARN  log_warn
+#define LOG_INFO  log_info
+#define LOG_DEBUG log_debug
