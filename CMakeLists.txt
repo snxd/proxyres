@@ -38,6 +38,7 @@ endif()
 
 set(PROXYRES_HDRS
     include/proxyres/config.h
+    include/proxyres/log.h
     include/proxyres/proxyres.h
     include/proxyres/resolver.h)
 if(PROXYRES_EXECUTE)
@@ -56,6 +57,7 @@ list(APPEND PROXYRES_HDRS
     util.h)
 list(APPEND PROXYRES_SRCS
     config.c
+    log.c
     net_util.c
     proxyres.c
     resolver.c
