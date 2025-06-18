@@ -8,7 +8,7 @@
 
 #ifdef HAVE_DUKTAPE
 #  include "execute_duktape.h"
-#elif defined(WIN32)
+#elif defined(_WIN32)
 #  if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
 #    include "execute_wsh.h"
 #  endif
