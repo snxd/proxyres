@@ -126,7 +126,7 @@ static void js_print_exception(JSContextRef ctx, JSValueRef exception) {
     }
 
     if (!printed) {
-        LOG_ERROR("Unable to print unknown exception object\n");
+        log_error("Unable to print unknown exception object");
         return;
     }
 }
@@ -234,7 +234,7 @@ bool proxy_execute_register_function(void *ctx, JSGlobalContextRef global, const
     JSObjectRef function = g_proxy_execute_jscore.JSObjectMakeFunctionWithCallback(global, name_string, callback);
     if (!function) {
         g_proxy_execute_jscore.JSStringRelease(name_string);
-        LOG_ERROR("Unable to hook native function for %s\n", name);
+        log_error("Unable to hook native function for %s", name);
         return false;
     }
 
@@ -262,7 +262,7 @@ bool proxy_execute_jscore_get_proxies_for_url(void *ctx, const char *script, con
 
     global = g_proxy_execute_jscore.JSGlobalContextCreate(NULL);
     if (!global) {
-        LOG_ERROR("Failed to create global JS context\n");
+        log_error("Failed to create global JS context");
         goto jscoregtk_execute_cleanup;
     }
 
@@ -279,13 +279,13 @@ bool proxy_execute_jscore_get_proxies_for_url(void *ctx, const char *script, con
     // Load Mozilla's JavaScript PAC utilities to help process PAC files
     utils_javascript = g_proxy_execute_jscore.JSStringCreateWithUTF8CString(MOZILLA_PAC_JAVASCRIPT);
     if (!utils_javascript) {
-        LOG_ERROR("Unable to load Mozilla's JavaScript PAC utilities\n");
+        log_error("Unable to load Mozilla's JavaScript PAC utilities");
         goto jscoregtk_execute_cleanup;
     }
     g_proxy_execute_jscore.JSEvaluateScript(global, utils_javascript, NULL, NULL, 1, &exception);
     g_proxy_execute_jscore.JSStringRelease(utils_javascript);
     if (exception) {
-        LOG_ERROR("Unable to execute Mozilla's JavaScript PAC utilities\n");
+        log_error("Unable to execute Mozilla's JavaScript PAC utilities");
         js_print_exception(global, exception);
         goto jscoregtk_execute_cleanup;
     }
@@ -295,7 +295,7 @@ bool proxy_execute_jscore_get_proxies_for_url(void *ctx, const char *script, con
     g_proxy_execute_jscore.JSEvaluateScript(global, script_string, NULL, NULL, 1, &exception);
     g_proxy_execute_jscore.JSStringRelease(script_string);
     if (exception) {
-        LOG_ERROR("Unable to execute PAC script\n");
+        log_error("Unable to execute PAC script");
         js_print_exception(global, exception);
         goto jscoregtk_execute_cleanup;
     }
@@ -312,13 +312,13 @@ bool proxy_execute_jscore_get_proxies_for_url(void *ctx, const char *script, con
     proxy_value = g_proxy_execute_jscore.JSEvaluateScript(global, find_proxy_string, NULL, NULL, 1, &exception);
     g_proxy_execute_jscore.JSStringRelease(find_proxy_string);
     if (exception) {
-        LOG_ERROR("Unable to execute FindProxyForURL\n");
+        log_error("Unable to execute FindProxyForURL");
         js_print_exception(global, exception);
         goto jscoregtk_execute_cleanup;
     }
 
     if (!g_proxy_execute_jscore.JSValueIsString(global, proxy_value)) {
-        LOG_ERROR("Incorrect return type from FindProxyForURL\n");
+        log_error("Incorrect return type from FindProxyForURL");
         goto jscoregtk_execute_cleanup;
     }
 

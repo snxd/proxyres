@@ -66,7 +66,7 @@ static void js_print_exception(JSCContext *context, JSCException *exception) {
         return;
     }
 
-    LOG_ERROR("Unable to print exception object\n");
+    log_error("Unable to print exception object");
 }
 
 static char *proxy_execute_jsc_dns_resolve(const char *host) {
@@ -105,7 +105,7 @@ bool proxy_execute_jsc_get_proxies_for_url(void *ctx, const char *script, const 
 
     global = g_proxy_execute_jsc.jsc_context_new();
     if (!global) {
-        LOG_ERROR("Failed to create global JS context\n");
+        log_error("Failed to create global JS context");
         goto jscgtk_execute_cleanup;
     }
 
@@ -128,7 +128,7 @@ bool proxy_execute_jsc_get_proxies_for_url(void *ctx, const char *script, const 
             functions[i].param_count, G_TYPE_STRING);
 
         if (!functions[i].value) {
-            LOG_ERROR("Unable to hook native function for %s\n", functions[i].name);
+            log_error("Unable to hook native function for %s", functions[i].name);
             goto jscgtk_execute_cleanup;
         }
 
@@ -139,7 +139,7 @@ bool proxy_execute_jsc_get_proxies_for_url(void *ctx, const char *script, const 
     result = g_proxy_execute_jsc.jsc_context_evaluate(global, MOZILLA_PAC_JAVASCRIPT, -1);
     exception = g_proxy_execute_jsc.jsc_context_get_exception(global);
     if (exception) {
-        LOG_ERROR("Unable to execute Mozilla's JavaScript PAC utilities\n");
+        log_error("Unable to execute Mozilla's JavaScript PAC utilities");
         js_print_exception(global, exception);
         goto jscgtk_execute_cleanup;
     }
@@ -150,7 +150,7 @@ bool proxy_execute_jsc_get_proxies_for_url(void *ctx, const char *script, const 
     result = g_proxy_execute_jsc.jsc_context_evaluate(global, script, -1);
     exception = g_proxy_execute_jsc.jsc_context_get_exception(global);
     if (exception) {
-        LOG_ERROR("Unable to execute PAC script\n");
+        log_error("Unable to execute PAC script");
         js_print_exception(global, exception);
         goto jscgtk_execute_cleanup;
     }
@@ -166,13 +166,13 @@ bool proxy_execute_jsc_get_proxies_for_url(void *ctx, const char *script, const 
     result = g_proxy_execute_jsc.jsc_context_evaluate(global, find_proxy, -1);
     exception = g_proxy_execute_jsc.jsc_context_get_exception(global);
     if (exception) {
-        LOG_ERROR("Unable to execute FindProxyForURL\n");
+        log_error("Unable to execute FindProxyForURL");
         js_print_exception(global, exception);
         goto jscgtk_execute_cleanup;
     }
 
     if (!g_proxy_execute_jsc.jsc_value_is_string(result)) {
-        LOG_ERROR("Incorrect return type from FindProxyForURL\n");
+        log_error("Incorrect return type from FindProxyForURL");
         goto jscgtk_execute_cleanup;
     }
 

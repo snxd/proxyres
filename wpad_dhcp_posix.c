@@ -181,22 +181,22 @@ static bool dhcp_read_reply(SOCKET sfd, uint32_t request_xid, dhcp_msg *reply) {
     const ssize_t response_len = recvfrom(sfd, (char *)reply, sizeof(dhcp_msg), 0, NULL, NULL);
 
     if (response_len <= (ssize_t)(sizeof(dhcp_msg) - DHCP_OPT_MIN_LENGTH)) {
-        LOG_DEBUG("Unable to read DHCP reply (%d:%d)\n", (int32_t)response_len, socketerr);
+        log_debug("Unable to read DHCP reply (%d:%d)", (int32_t)response_len, socketerr);
         return false;
     }
 
     if (reply->op != DHCP_BOOT_REPLY) {
-        LOG_DEBUG("Invalid DHCP reply operation (%" PRId32 ")\n", (int32_t)reply->op);
+        log_debug("Invalid DHCP reply operation (%" PRId32 ")", (int32_t)reply->op);
         return false;
     }
 
     if (reply->xid != request_xid) {
-        LOG_ERROR("Invalid DHCP reply transaction id (%" PRIx32 ")\n", reply->xid);
+        log_error("Invalid DHCP reply transaction id (%" PRIx32 ")", reply->xid);
         return false;
     }
 
     if (!dhcp_check_magic(reply->options)) {
-        LOG_ERROR("Invalid DHCP reply magic (%" PRIx32 ")\n", *(uint32_t *)reply->options);
+        log_error("Invalid DHCP reply magic (%" PRIx32 ")", *(uint32_t *)reply->options);
         return false;
     }
     return true;
@@ -205,7 +205,7 @@ static bool dhcp_read_reply(SOCKET sfd, uint32_t request_xid, dhcp_msg *reply) {
 char *wpad_dhcp_adapter_posix(uint8_t bind_ip[4], net_adapter_s *adapter, int32_t timeout_sec) {
     SOCKET sfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if ((int)sfd == -1) {
-        LOG_ERROR("Unable to create udp socket\n");
+        log_error("Unable to create udp socket");
         return NULL;
     }
 
@@ -230,7 +230,7 @@ char *wpad_dhcp_adapter_posix(uint8_t bind_ip[4], net_adapter_s *adapter, int32_
             err = bind(sfd, (struct sockaddr *)&address, sizeof(address));
         }
         if (err == -1) {
-            LOG_DEBUG("Unable to bind udp socket (%d)\n", socketerr);
+            log_debug("Unable to bind udp socket (%d)", socketerr);
             closesocket(sfd);
             return NULL;
         }
@@ -242,7 +242,7 @@ char *wpad_dhcp_adapter_posix(uint8_t bind_ip[4], net_adapter_s *adapter, int32_
 
     // Send DHCPINFORM request to DHCP server
     if (!dhcp_send_inform(sfd, request_xid, adapter)) {
-        LOG_ERROR("Unable to send DHCP inform\n");
+        log_error("Unable to send DHCP inform");
         closesocket(sfd);
         return NULL;
     }
@@ -260,14 +260,14 @@ char *wpad_dhcp_adapter_posix(uint8_t bind_ip[4], net_adapter_s *adapter, int32_
 
     opt = dhcp_get_option(&reply, DHCP_OPT_MSGTYPE, &opt_length);
     if (opt_length != 1 || *opt != DHCP_ACK) {
-        LOG_ERROR("Invalid DHCP reply (msgtype=%d)\n", *opt);
+        log_error("Invalid DHCP reply (msgtype=%d)", *opt);
         return NULL;
     }
     free(opt);
 
     opt = dhcp_get_option(&reply, DHCP_OPT_WPAD, &opt_length);
     if (opt_length <= 0) {
-        LOG_ERROR("Invalid DHCP reply (optlen=%d)\n", opt_length);
+        log_error("Invalid DHCP reply (optlen=%d)", opt_length);
         return NULL;
     }
 

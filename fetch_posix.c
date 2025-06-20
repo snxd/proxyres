@@ -44,7 +44,7 @@ char *fetch_get(const char *url, int32_t *error) {
     // Check to make sure we are only using http:// urls
     if (strstr(url, "https://")) {
         err = ENOTSUP;
-        LOG_ERROR("HTTPS not supported (%" PRId32 ")\n", err);
+        log_error("HTTPS not supported (%" PRId32 ")", err);
         goto download_cleanup;
     }
 
@@ -52,7 +52,7 @@ char *fetch_get(const char *url, int32_t *error) {
     host = get_url_host(url);
     if (!host) {
         err = EADDRNOTAVAIL;
-        LOG_ERROR("Unable to parse URL host (%" PRId32 ")\n", err);
+        log_error("Unable to parse URL host (%" PRId32 ")", err);
         goto download_cleanup;
     }
 
@@ -73,7 +73,7 @@ char *fetch_get(const char *url, int32_t *error) {
     err = getaddrinfo(host, port, &hints, &address_info);
     if (err != 0) {
         err = socketerr;
-        LOG_DEBUG("Unable to resolve host %s (%" PRId32 ")\n", host, err);
+        log_debug("Unable to resolve host %s (%" PRId32 ")", host, err);
         goto download_cleanup;
     }
 
@@ -81,7 +81,7 @@ char *fetch_get(const char *url, int32_t *error) {
     sfd = socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
     if ((int)sfd == -1) {
         err = socketerr;
-        LOG_ERROR("Unable to create socket (%" PRId32 ")\n", err);
+        log_error("Unable to create socket (%" PRId32 ")", err);
         goto download_cleanup;
     }
 
@@ -89,7 +89,7 @@ char *fetch_get(const char *url, int32_t *error) {
     err = connect(sfd, address_info->ai_addr, (int)address_info->ai_addrlen);
     if (err != 0) {
         err = socketerr;
-        LOG_DEBUG("Unable to connect to host %s (%" PRId32 ")\n", host, err);
+        log_debug("Unable to connect to host %s (%" PRId32 ")", host, err);
         goto download_cleanup;
     }
 
@@ -107,7 +107,7 @@ char *fetch_get(const char *url, int32_t *error) {
     size_t written = send(sfd, request, (int)strlen(request), 0);
     if (written != strlen(request)) {
         err = socketerr;
-        LOG_ERROR("Unable to send HTTP request (%" PRId32 ")\n", err);
+        log_error("Unable to send HTTP request (%" PRId32 ")", err);
         goto download_cleanup;
     }
 
@@ -126,7 +126,7 @@ char *fetch_get(const char *url, int32_t *error) {
     const char *content_length_header = str_find_len_case_str(response, response_len, "Content-Length: ");
     if (!content_length_header) {
         err = EIO;
-        LOG_ERROR("Unable to find Content-Length header (%" PRId32 ")\n", err);
+        log_error("Unable to find Content-Length header (%" PRId32 ")", err);
         goto download_cleanup;
     }
 
@@ -134,7 +134,7 @@ char *fetch_get(const char *url, int32_t *error) {
     const size_t content_length = strtoul(content_length_header + 16, NULL, 0);
     if (content_length <= 0 || content_length >= SCRIPT_MAX) {
         err = EIO;
-        LOG_ERROR("Invalid Content-Length header (%" PRId64 "/%" PRId32 ")\n", content_length, err);
+        log_error("Invalid Content-Length header (%" PRId64 "/%" PRId32 ")", content_length, err);
         goto download_cleanup;
     }
 
@@ -142,7 +142,7 @@ char *fetch_get(const char *url, int32_t *error) {
     body = (char *)calloc(content_length + 1, sizeof(char));
     if (!body) {
         err = ENOMEM;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "response body", err);
+        log_error("Unable to allocate memory for %s (%" PRId32 ")", "response body", err);
         goto download_cleanup;
     }
 
@@ -150,7 +150,7 @@ char *fetch_get(const char *url, int32_t *error) {
     const char *body_start = str_find_len_str(response, response_len, "\r\n\r\n");
     if (!body_start) {
         err = EIO;
-        LOG_ERROR("Unable to find response body (%" PRId32 ")\n", err);
+        log_error("Unable to find response body (%" PRId32 ")", err);
         goto download_cleanup;
     }
     body_start += 4;

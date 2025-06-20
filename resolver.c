@@ -89,7 +89,7 @@ static bool proxy_resolver_get_proxies_for_url_from_system_config(void *ctx, con
     // Use scheme associated with the URL when determining proxy
     scheme = get_url_scheme(url, "http");
     if (!scheme) {
-        LOG_ERROR("Unable to allocate memory for scheme\n");
+        log_error("Unable to allocate memory for scheme");
         goto config_done;
     }
 
@@ -101,7 +101,7 @@ static bool proxy_resolver_get_proxies_for_url_from_system_config(void *ctx, con
         bool should_bypass = should_bypass_proxy(url, bypass_list);
         if (should_bypass) {
             // Bypass the proxy for the url
-            LOG_INFO("Bypassing proxy for %s (%s)\n", url, bypass_list ? bypass_list : "null");
+            log_info("Bypassing proxy for %s (%s)", url, bypass_list ? bypass_list : "null");
             proxy_resolver->list = strdup("direct://");
         } else {
             // Construct proxy list url using scheme associated with proxy's port if available,
@@ -251,7 +251,7 @@ bool proxy_resolver_global_init(void) {
 #if defined(_WIN32) && (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
     WSADATA WsaData = {0};
     if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0) {
-        LOG_ERROR("Failed to initialize winsock %d\n", WSAGetLastError());
+        log_error("Failed to initialize winsock %d", WSAGetLastError());
         return false;
     }
 #endif
@@ -290,7 +290,7 @@ bool proxy_resolver_global_init(void) {
 #endif
 
     if (!g_proxy_resolver.proxy_resolver_i) {
-        LOG_ERROR("No proxy resolver available\n");
+        log_error("No proxy resolver available");
         return false;
     }
 
@@ -303,7 +303,7 @@ bool proxy_resolver_global_init(void) {
     // Create thread pool to handle proxy resolution requests asynchronously
     g_proxy_resolver.threadpool = threadpool_create(THREADPOOL_DEFAULT_MIN_THREADS, THREADPOOL_DEFAULT_MAX_THREADS);
     if (!g_proxy_resolver.threadpool) {
-        LOG_ERROR("Failed to create thread pool\n");
+        log_error("Failed to create thread pool");
         proxy_resolver_global_cleanup();
         return false;
     }
@@ -312,7 +312,7 @@ bool proxy_resolver_global_init(void) {
     // Pass threadpool to posix resolver to immediately start wpad discovery
     if (g_proxy_resolver.proxy_resolver_i == proxy_resolver_posix_get_interface()) {
         if (!proxy_resolver_posix_init_ex(g_proxy_resolver.threadpool)) {
-            LOG_ERROR("Failed to initialize posix proxy resolver\n");
+            log_error("Failed to initialize posix proxy resolver");
             proxy_resolver_global_cleanup();
             return false;
         }

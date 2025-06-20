@@ -38,7 +38,7 @@ char *wpad_dns(const char *fqdn) {
     if (!fqdn) {
         // Get local hostname
         if (gethostname(hostname, sizeof(hostname)) == -1) {
-            LOG_ERROR("Unable to get hostname (%d)\n", socketerr);
+            log_error("Unable to get hostname (%d)", socketerr);
             return NULL;
         }
         hostname[sizeof(hostname) - 1] = 0;
@@ -46,7 +46,7 @@ char *wpad_dns(const char *fqdn) {
         // Get hostent for local hostname
         struct hostent *localent = gethostbyname(hostname);
         if (!localent) {
-            LOG_ERROR("Unable to get hostent for %s (%d)\n", hostname, socketerr);
+            log_error("Unable to get hostent for %s (%d)", hostname, socketerr);
             return NULL;
         }
 
@@ -55,7 +55,7 @@ char *wpad_dns(const char *fqdn) {
 
         // Validate canonical name
         if (!fqdn || !strlen(fqdn) || !strcmp(fqdn, "localhost") || isdigit(*fqdn)) {
-            LOG_DEBUG("Unable to get canonical name for %s (%d)\n", hostname, socketerr);
+            log_debug("Unable to get canonical name for %s (%d)", hostname, socketerr);
             return NULL;
         }
     }
@@ -71,7 +71,7 @@ char *wpad_dns(const char *fqdn) {
 
         // Construct WPAD url with next part of FQDN
         snprintf(wpad_host, sizeof(wpad_host), "wpad.%s", name);
-        LOG_INFO("Checking next WPAD hostname: %s\n", wpad_host);
+        log_info("Checking next WPAD hostname: %s", wpad_host);
 
         char wpad_url[HOST_MAX + 18];
         snprintf(wpad_url, sizeof(wpad_url), "http://%s/wpad.dat", wpad_host);
@@ -79,7 +79,7 @@ char *wpad_dns(const char *fqdn) {
         if (script)
             return script;
 
-        LOG_INFO("No server found at %s (%d)\n", wpad_host, error);
+        log_info("No server found at %s (%d)", wpad_host, error);
         name = next_part;
     } while (true);
 

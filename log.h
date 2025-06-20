@@ -20,8 +20,3 @@ void log_debug(const char *fmt, ...);
 #ifdef __cplusplus
 }
 #endif
-
-#define LOG_ERROR log_error
-#define LOG_WARN  log_warn
-#define LOG_INFO  log_info
-#define LOG_DEBUG log_debug

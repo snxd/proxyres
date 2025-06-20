@@ -99,7 +99,7 @@ static HRESULT STDMETHODCALLTYPE active_script_site_on_script_error(IActiveScrip
     // Print exception information to log
     HRESULT result = IActiveScriptError_GetExceptionInfo(error, &excep_info);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to get active script error (0x%08lx)\n", result);
+        log_error("Failed to get active script error (0x%08lx)", result);
         return S_OK;
     }
 

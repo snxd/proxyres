@@ -24,20 +24,24 @@ void proxy_log_set_debug_cb(void (*func)(const char *fmt, va_list args)) {
 void log_error(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    if (log_error_func)
+    if (log_error_func) {
         log_error_func(fmt, args);
-    else
+    } else {
         vprintf(fmt, args);
+        printf("\n");
+    }
     va_end(args);
 }
 
 void log_warn(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    if (log_warn_func)
+    if (log_warn_func) {
         log_warn_func(fmt, args);
-    else
+    } else {
         vprintf(fmt, args);
+        printf("\n");
+    }
     va_end(args);
 }
 
@@ -47,8 +51,10 @@ void log_info(const char *fmt, ...) {
     if (log_info_func)
         log_info_func(fmt, args);
 #ifdef _DEBUG
-    else
+    else {
         vprintf(fmt, args);
+        printf("\n");
+    }
 #endif
     va_end(args);
 }
@@ -59,8 +65,10 @@ void log_debug(const char *fmt, ...) {
     if (log_debug_func)
         log_debug_func(fmt, args);
 #ifdef _DEBUG
-    else
+    else {
         vprintf(fmt, args);
+        printf("\n");
+    }
 #endif
     va_end(args);
 }

@@ -54,7 +54,7 @@ bool proxy_resolver_winxp_get_proxies_for_url(void *ctx, const char *url) {
         auto_config_url_wide = utf8_dup_to_wchar(auto_config_url);
         if (!auto_config_url_wide) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "auto config url", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "auto config url", proxy_resolver->error);
             goto winxp_done;
         }
 
@@ -70,7 +70,7 @@ bool proxy_resolver_winxp_get_proxies_for_url(void *ctx, const char *url) {
     url_wide = utf8_dup_to_wchar(url);
     if (!url_wide) {
         proxy_resolver->error = ERROR_OUTOFMEMORY;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "wide char url", proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId32 ")", "wide char url", proxy_resolver->error);
         goto winxp_done;
     }
 
@@ -107,7 +107,7 @@ bool proxy_resolver_winxp_get_proxies_for_url(void *ctx, const char *url) {
             proxy = wchar_dup_to_utf8(proxy_info.lpszProxy);
         if (!proxy) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "proxy", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "proxy", proxy_resolver->error);
             goto winxp_done;
         }
 
@@ -118,7 +118,7 @@ bool proxy_resolver_winxp_get_proxies_for_url(void *ctx, const char *url) {
             bool should_bypass = should_bypass_proxy(url, bypass_list);
             if (should_bypass) {
                 // Bypass the proxy for the url
-                LOG_INFO("Bypassing proxy for %s (%s)\n", url, bypass_list);
+                log_info("Bypassing proxy for %s (%s)", url, bypass_list);
                 proxy_resolver->list = strdup("direct://");
             }
         }
@@ -128,7 +128,7 @@ bool proxy_resolver_winxp_get_proxies_for_url(void *ctx, const char *url) {
             proxy_resolver->list = convert_winhttp_proxy_list_to_uri_list(proxy);
         if (!proxy_resolver->list) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "proxy list", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "proxy list", proxy_resolver->error);
             goto winxp_done;
         }
         break;
