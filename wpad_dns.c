@@ -44,7 +44,16 @@ char *wpad_dns(const char *fqdn) {
         hostname[sizeof(hostname) - 1] = 0;
 
         // Get hostent for local hostname
-        struct hostent *localent = gethostbyname(hostname);
+        struct hostent *localent = NULL;
+#ifdef _WIN32
+        do {
+            localent = gethostbyname(hostname);
+        } while (!localent && WSAGetLastError() == WSATRY_AGAIN);
+#else
+        do {
+            localent = gethostbyname(hostname);
+        } while (!localent && h_errno == TRY_AGAIN);
+#endif
         if (!localent) {
             log_error("Unable to get hostent for %s (%d)", hostname, socketerr);
             return NULL;
