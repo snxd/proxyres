@@ -6,6 +6,7 @@
 #include "config.h"
 #include "resolver.h"
 #include "execute.h"
+#include "log.h"
 
 #ifdef __cplusplus
 extern "C" {
