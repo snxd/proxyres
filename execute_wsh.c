@@ -52,46 +52,46 @@ static bool script_engine_create(proxy_execute_wsh_s *proxy_execute_wsh) {
 
     HRESULT result = CLSIDFromProgID(L"JavaScript", &lang_clsid);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to find JavaScript CLSID: (%08lx)\n", result);
+        log_error("Failed to find JavaScript CLSID: (%08lx)", result);
         return false;
     }
 
     result = CoCreateInstance(&lang_clsid, NULL, CLSCTX_INPROC_SERVER, &IID_IActiveScript,
                               (void **)&proxy_execute_wsh->active_script);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to create active script instance (%08lx)\n", result);
+        log_error("Failed to create active script instance (%08lx)", result);
         return false;
     }
 
     result = IActiveScript_QueryInterface(proxy_execute_wsh->active_script, &IID_IActiveScriptParse,
                                           (void **)&proxy_execute_wsh->active_script_parse);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to create active script parse instance (%08lx)\n", result);
+        log_error("Failed to create active script parse instance (%08lx)", result);
         return false;
     }
 
     result = IActiveScript_SetScriptSite(proxy_execute_wsh->active_script, &proxy_execute_wsh->active_script_site.site);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to set script site for active script (%08lx)\n", result);
+        log_error("Failed to set script site for active script (%08lx)", result);
         return false;
     }
 
     result = IActiveScriptParse_InitNew(proxy_execute_wsh->active_script_parse);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to initialize active script parse (%08lx)\n", result);
+        log_error("Failed to initialize active script parse (%08lx)", result);
         return false;
     }
 
     result = IActiveScript_AddNamedItem(proxy_execute_wsh->active_script, WSH_SCRIPT_NAME,
                                         SCRIPTITEM_GLOBALMEMBERS | SCRIPTITEM_ISVISIBLE);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to add named item to active script (%08lx)\n", result);
+        log_error("Failed to add named item to active script (%08lx)", result);
         return false;
     }
 
     result = IActiveScript_SetScriptState(proxy_execute_wsh->active_script, SCRIPTSTATE_STARTED);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to set script state to started (%08lx)\n", result);
+        log_error("Failed to set script state to started (%08lx)", result);
         return false;
     }
 
@@ -114,7 +114,7 @@ static bool script_engine_parse_text(proxy_execute_wsh_s *proxy_execute_wsh, con
     SysFreeString(script_bstr);
 
     if (FAILED(result)) {
-        LOG_ERROR("Failed to parse script text (%08lx)\n", result);
+        log_error("Failed to parse script text (%08lx)", result);
         return false;
     }
 
@@ -128,7 +128,7 @@ static bool script_engine_find_proxy_for_url(proxy_execute_wsh_s *proxy_execute_
 
     HRESULT result = IActiveScript_GetScriptDispatch(proxy_execute_wsh->active_script, NULL, &dispatch);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to get script dispatch (%08lx)\n", result);
+        log_error("Failed to get script dispatch (%08lx)", result);
         return false;
     }
 
@@ -136,7 +136,7 @@ static bool script_engine_find_proxy_for_url(proxy_execute_wsh_s *proxy_execute_
     LPOLESTR find_proxy_for_url = OLESTR("FindProxyForURL");
     result = IDispatch_GetIDsOfNames(dispatch, &IID_NULL, &find_proxy_for_url, 1, LOCALE_NEUTRAL, &disp_id);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to get ID of names (%08lx)\n", result);
+        log_error("Failed to get ID of names (%08lx)", result);
         goto script_engine_execute_cleanup;
     }
 
@@ -158,14 +158,14 @@ static bool script_engine_find_proxy_for_url(proxy_execute_wsh_s *proxy_execute_
     // Create VARIANTARG for the host parameter
     char *host = get_url_host(url);
     if (!host) {
-        LOG_ERROR("Failed to get host from url\n");
+        log_error("Failed to get host from url");
         goto script_engine_execute_cleanup;
     }
 
     wchar_t *host_wchar = utf8_dup_to_wchar(host);
     free(host);
     if (!host_wchar) {
-        LOG_ERROR("Failed to convert host to wchar\n");
+        log_error("Failed to convert host to wchar");
         goto script_engine_execute_cleanup;
     }
 
@@ -181,13 +181,13 @@ static bool script_engine_find_proxy_for_url(proxy_execute_wsh_s *proxy_execute_
     result = IDispatch_Invoke(dispatch, disp_id, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &params, &result_ptr, NULL,
                               NULL);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to invoke script (%08lx)\n", result);
+        log_error("Failed to invoke script (%08lx)", result);
         goto script_engine_execute_cleanup;
     }
 
     // Return the result of the FindProxyForURL function
     if (result_ptr.vt != VT_BSTR) {
-        LOG_ERROR("Invalid result type returned from script (%d)\n", result_ptr.vt);
+        log_error("Invalid result type returned from script (%d)", result_ptr.vt);
         goto script_engine_execute_cleanup;
     }
 
@@ -211,21 +211,21 @@ static bool script_engine_delete(proxy_execute_wsh_s *proxy_execute_wsh) {
     if (proxy_execute_wsh->active_script) {
         HRESULT result = IActiveScript_Close(proxy_execute_wsh->active_script);
         if (FAILED(result)) {
-            LOG_ERROR("Failed to close active script (%08lx)\n", result);
+            log_error("Failed to close active script (%08lx)", result);
             return false;
         }
     }
     if (proxy_execute_wsh->active_script_parse) {
         HRESULT result = IActiveScriptParse_Release(proxy_execute_wsh->active_script_parse);
         if (FAILED(result)) {
-            LOG_ERROR("Failed to release active script parse (%08lx)\n", result);
+            log_error("Failed to release active script parse (%08lx)", result);
             return false;
         }
     }
     if (proxy_execute_wsh->active_script) {
         HRESULT result = IActiveScript_Release(proxy_execute_wsh->active_script);
         if (FAILED(result)) {
-            LOG_ERROR("Failed to release active script (%08lx)\n", result);
+            log_error("Failed to release active script (%08lx)", result);
             return false;
         }
     }
@@ -245,17 +245,17 @@ bool proxy_execute_wsh_get_proxies_for_url(void *ctx, const char *script, const 
         return false;
 
     if (!script_engine_parse_text(proxy_execute_wsh, MOZILLA_PAC_JAVASCRIPT)) {
-        LOG_ERROR("Failed to parse Mozilla PAC JavaScript\n");
+        log_error("Failed to parse Mozilla PAC JavaScript");
         goto execute_wsh_cleanup;
     }
 
     if (!script_engine_parse_text(proxy_execute_wsh, script)) {
-        LOG_ERROR("Failed to parse PAC script\n");
+        log_error("Failed to parse PAC script");
         goto execute_wsh_cleanup;
     }
 
     if (!script_engine_find_proxy_for_url(proxy_execute_wsh, url)) {
-        LOG_ERROR("Failed to execute script\n");
+        log_error("Failed to execute script");
         goto execute_wsh_cleanup;
     }
 

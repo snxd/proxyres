@@ -88,14 +88,14 @@ bool proxy_execute_duktape_get_proxies_for_url(void *ctx, const char *script, co
 
     // Load Mozilla's JavaScript PAC utilities to help process PAC files
     if (duk_peval_string(duk_ctx, MOZILLA_PAC_JAVASCRIPT) != 0) {
-        LOG_ERROR("Failed to parse Mozilla PAC JavaScript\n");
+        log_error("Failed to parse Mozilla PAC JavaScript");
         duk_pop(duk_ctx);
         return false;
     }
 
     // Evaluate the PAC script
     if (duk_peval_string(duk_ctx, script) != 0) {
-        LOG_ERROR("Error evaluating PAC script: %s\n", duk_safe_to_string(duk_ctx, -1));
+        log_error("Error evaluating PAC script: %s", duk_safe_to_string(duk_ctx, -1));
         duk_pop(duk_ctx);
         return false;
     }
@@ -105,7 +105,7 @@ bool proxy_execute_duktape_get_proxies_for_url(void *ctx, const char *script, co
     duk_push_global_object(duk_ctx);
     duk_get_prop_string(duk_ctx, -1, "FindProxyForURL");
     if (!duk_is_function(duk_ctx, -1)) {
-        LOG_ERROR("FindProxyForURL is not a function\n");
+        log_error("FindProxyForURL is not a function");
         duk_pop_2(duk_ctx);
         return false;
     }
@@ -117,7 +117,7 @@ bool proxy_execute_duktape_get_proxies_for_url(void *ctx, const char *script, co
 
     // Execute the call to FindProxyForURL
     if (duk_pcall(duk_ctx, 2) != 0) {
-        LOG_ERROR("Error calling FindProxyForURL: %s\n", duk_safe_to_string(duk_ctx, -1));
+        log_error("Error calling FindProxyForURL: %s", duk_safe_to_string(duk_ctx, -1));
         duk_pop_2(duk_ctx);
         return false;
     }

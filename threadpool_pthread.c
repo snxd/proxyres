@@ -61,7 +61,7 @@ static bool threadpool_job_delete(threadpool_job_s **job) {
 }
 
 static bool threadpool_enqueue_job(threadpool_s *threadpool, threadpool_job_s *job) {
-    LOG_DEBUG("threadpool - job 0x%" PRIxPTR " - enqueue\n", (intptr_t)job);
+    log_debug("threadpool - job 0x%" PRIxPTR " - enqueue", (intptr_t)job);
 
     // Add job to the end of the queue
     if (!threadpool->queue_last) {
@@ -86,18 +86,18 @@ static threadpool_job_s *threadpool_dequeue_job(threadpool_s *threadpool) {
         threadpool->queue_last = NULL;
     threadpool->queue_count--;
 
-    LOG_DEBUG("threadpool - job 0x%" PRIxPTR " - dequeue\n", (intptr_t)job);
+    log_debug("threadpool - job 0x%" PRIxPTR " - dequeue", (intptr_t)job);
     return job;
 }
 
 static void *threadpool_do_work(void *arg) {
     threadpool_s *threadpool = (threadpool_s *)arg;
 
-    LOG_DEBUG("threadpool - worker 0x%" PRIx64 " - started\n", (uint64_t)pthread_self());
+    log_debug("threadpool - worker 0x%" PRIx64 " - started", (uint64_t)pthread_self());
 
     while (true) {
         pthread_mutex_lock(&threadpool->queue_mutex);
-        LOG_DEBUG("threadpool - worker 0x%" PRIx64 " - waiting for job\n", (uint64_t)pthread_self());
+        log_debug("threadpool - worker 0x%" PRIx64 " - waiting for job", (uint64_t)pthread_self());
 
         // Sleep until there is work to do
         while (!threadpool->stop && !threadpool->queue_first) {
@@ -129,10 +129,10 @@ static void *threadpool_do_work(void *arg) {
             ((init)objc_msgSend)(autorelease_pool, sel_getUid("init"));
 #endif
 
-            LOG_DEBUG("threadpool - worker 0x%" PRIx64 " - processing job 0x%" PRIxPTR "\n", (uint64_t)pthread_self(),
+            log_debug("threadpool - worker 0x%" PRIx64 " - processing job 0x%" PRIxPTR, (uint64_t)pthread_self(),
                       (intptr_t)job);
             job->callback(job->user_data);
-            LOG_DEBUG("threadpool - worker 0x%" PRIx64 " - job complete 0x%" PRIxPTR "\n", (uint64_t)pthread_self(),
+            log_debug("threadpool - worker 0x%" PRIx64 " - job complete 0x%" PRIxPTR, (uint64_t)pthread_self(),
                       (intptr_t)job);
 
 #ifdef __APPLE__
@@ -155,7 +155,7 @@ static void *threadpool_do_work(void *arg) {
         pthread_mutex_unlock(&threadpool->queue_mutex);
     }
 
-    LOG_DEBUG("threadpool - worker 0x%" PRIx64 " - stopped\n", (uint64_t)pthread_self());
+    log_debug("threadpool - worker 0x%" PRIx64 " - stopped", (uint64_t)pthread_self());
 
     pthread_cond_signal(&threadpool->lazy_cond);
     pthread_mutex_unlock(&threadpool->queue_mutex);

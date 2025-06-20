@@ -77,7 +77,7 @@ static void proxy_resolver_mac_auto_config_result_callback(void *client, CFArray
                 strncpy(proxy_resolver->list + list_len, scheme, max_list - list_len);
                 list_len += strlen(scheme);
             } else {
-                LOG_WARN("Unknown proxy type encountered\n");
+                log_warn("Unknown proxy type encountered");
                 continue;
             }
 
@@ -114,7 +114,7 @@ static void proxy_resolver_mac_auto_config_result_callback(void *client, CFArray
         }
         if (list_len >= max_list) {
             proxy_resolver->error = ERANGE;
-            LOG_WARN("Proxy list limit exceeded\n");
+            log_warn("Proxy list limit exceeded");
             free(proxy_resolver->list);
             proxy_resolver->list = NULL;
         } else if (!proxy_resolver->list) {
@@ -141,7 +141,7 @@ bool proxy_resolver_mac_get_proxies_for_url(void *ctx, const char *url) {
     auto_config_url = proxy_config_get_auto_config_url();
     if (!auto_config_url) {
         proxy_resolver->error = EINVAL;
-        LOG_ERROR("Auto configuration url not specified");
+        log_error("Auto configuration url not specified");
         goto mac_done;
     }
 
@@ -150,15 +150,14 @@ bool proxy_resolver_mac_get_proxies_for_url(void *ctx, const char *url) {
 
     if (!url_ref) {
         proxy_resolver->error = ENOMEM;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId64 ")\n", "auto config url reference",
-                  proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId64 ")", "auto config url reference", proxy_resolver->error);
         goto mac_done;
     }
 
     target_url_ref = CFURLCreateWithBytes(NULL, (const UInt8 *)url, strlen(url), kCFStringEncodingUTF8, NULL);
     if (!target_url_ref) {
         proxy_resolver->error = ENOMEM;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId64 ")\n", "target url reference", proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId64 ")", "target url reference", proxy_resolver->error);
         goto mac_done;
     }
 
@@ -168,12 +167,12 @@ bool proxy_resolver_mac_get_proxies_for_url(void *ctx, const char *url) {
                                                          proxy_resolver_mac_auto_config_result_callback, &context);
     if (!run_loop) {
         proxy_resolver->error = ELOOP;
-        LOG_ERROR("Failed to execute pac url (%" PRId64 ")\n", proxy_resolver->error);
+        log_error("Failed to execute pac url (%" PRId64 ")", proxy_resolver->error);
         goto mac_done;
     }
 
 #ifdef LEAK_SANITIZER
-    // There is a known issue mentioned in Chromium source, that the run loop instance 
+    // There is a known issue mentioned in Chromium source, that the run loop instance
     // returned by CFNetworkExecuteProxyAutoConfigurationURL leaks.
 
     // Additionally it is discussed on these forums:

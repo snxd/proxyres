@@ -62,19 +62,19 @@ void CALLBACK proxy_resolver_win8_winhttp_status_callback(HINTERNET Internet, DW
 
         // Failed to detect proxy auto configuration url so use DIRECT connection
         if (async_result->dwError == ERROR_WINHTTP_AUTODETECTION_FAILED) {
-            LOG_DEBUG("Proxy resolution returned code (%lu)\n", async_result->dwError);
+            log_debug("Proxy resolution returned code (%lu)", async_result->dwError);
             proxy_resolver->list = strdup("direct://");
             goto win8_async_done;
         }
 
         proxy_resolver->error = async_result->dwError;
-        LOG_ERROR("Unable to resolve proxy for url (%" PRId32 ")\n", proxy_resolver->error);
+        log_error("Unable to resolve proxy for url (%" PRId32 ")", proxy_resolver->error);
         goto win8_async_done;
     }
 
     proxy_resolver->error = g_proxy_resolver_win8.winhttp_get_proxy_result(proxy_resolver->resolver, &proxy_result);
     if (proxy_resolver->error != ERROR_SUCCESS) {
-        LOG_ERROR("Unable to retrieve proxy result (%" PRId32 ")\n", proxy_resolver->error);
+        log_error("Unable to retrieve proxy result (%" PRId32 ")", proxy_resolver->error);
         goto win8_async_done;
     }
 
@@ -89,7 +89,7 @@ void CALLBACK proxy_resolver_win8_winhttp_status_callback(HINTERNET Internet, DW
     proxy_resolver->list = (char *)calloc(max_list, sizeof(char));
     if (!proxy_resolver->list) {
         proxy_resolver->error = ERROR_OUTOFMEMORY;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "proxy list", proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId32 ")", "proxy list", proxy_resolver->error);
         goto win8_async_done;
     }
 
@@ -174,7 +174,7 @@ bool proxy_resolver_win8_get_proxies_for_url(void *ctx, const char *url) {
         auto_config_url_wide = utf8_dup_to_wchar(auto_config_url);
         if (!auto_config_url_wide) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "auto config url", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "auto config url", proxy_resolver->error);
             goto win8_done;
         }
 
@@ -189,7 +189,7 @@ bool proxy_resolver_win8_get_proxies_for_url(void *ctx, const char *url) {
     g_proxy_resolver_win8.winhttp_create_proxy_resolver(g_proxy_resolver_win8.session, &proxy_resolver->resolver);
     if (!proxy_resolver->resolver) {
         proxy_resolver->error = GetLastError();
-        LOG_ERROR("Unable to create proxy resolver (%" PRId32 ")", proxy_resolver->error);
+        log_error("Unable to create proxy resolver (%" PRId32 ")", proxy_resolver->error);
         goto win8_done;
     }
 
@@ -198,7 +198,7 @@ bool proxy_resolver_win8_get_proxies_for_url(void *ctx, const char *url) {
                                  WINHTTP_CALLBACK_FLAG_REQUEST_ERROR | WINHTTP_CALLBACK_FLAG_GETPROXYFORURL_COMPLETE,
                                  (DWORD_PTR)NULL) == WINHTTP_INVALID_STATUS_CALLBACK) {
         proxy_resolver->error = GetLastError();
-        LOG_ERROR("Unable to install status callback (%" PRId32 ")", proxy_resolver->error);
+        log_error("Unable to install status callback (%" PRId32 ")", proxy_resolver->error);
         goto win8_done;
     }
 
@@ -206,7 +206,7 @@ bool proxy_resolver_win8_get_proxies_for_url(void *ctx, const char *url) {
     url_wide = utf8_dup_to_wchar(url);
     if (!url_wide) {
         proxy_resolver->error = ERROR_OUTOFMEMORY;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "wide char url", proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId32 ")", "wide char url", proxy_resolver->error);
         goto win8_done;
     }
 
@@ -224,7 +224,7 @@ bool proxy_resolver_win8_get_proxies_for_url(void *ctx, const char *url) {
     if (error != ERROR_IO_PENDING) {
         proxy_resolver->error = error;
         if (error != ERROR_WINHTTP_UNRECOGNIZED_SCHEME)
-            LOG_ERROR("Unable to get proxy for url %s (%" PRId32 ")", url, proxy_resolver->error);
+            log_error("Unable to get proxy for url %s (%" PRId32 ")", url, proxy_resolver->error);
         goto win8_done;
     }
 

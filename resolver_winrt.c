@@ -155,13 +155,13 @@ async_complete_handler_invoke(WinRT_IAsyncOperationCompletedHandler_ProxyConfigu
 
     if (!proxy_resolver) {
         result = E_CHANGED_STATE;
-        LOG_WARN("Proxy resolver was detached from async operation (0x%lx)", result);
+        log_warn("Proxy resolver was detached from async operation (0x%lx)", result);
         goto winrt_async_done;
     }
 
     result = WinRT_IAsyncOperation_ProxyConfiguration_GetResults(self->async, &results);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to get results from async operation (0x%lx)", result);
+        log_error("Failed to get results from async operation (0x%lx)", result);
         goto winrt_async_done;
     }
 
@@ -175,7 +175,7 @@ async_complete_handler_invoke(WinRT_IAsyncOperationCompletedHandler_ProxyConfigu
     // Enumerate through proxy list
     result = WinRT_IProxyConfiguration_GetProxyUris(results, &uri_list);
     if (FAILED(result)) {
-        LOG_ERROR("Failed to get proxy list (0x%lx)", result);
+        log_error("Failed to get proxy list (0x%lx)", result);
         goto winrt_async_done;
     }
 
@@ -191,7 +191,7 @@ async_complete_handler_invoke(WinRT_IAsyncOperationCompletedHandler_ProxyConfigu
     proxy_resolver->list = (char *)calloc(max_list, sizeof(char));
     if (!proxy_resolver->list) {
         proxy_resolver->error = ERROR_OUTOFMEMORY;
-        LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "proxy list", proxy_resolver->error);
+        log_error("Unable to allocate memory for %s (%" PRId32 ")", "proxy list", proxy_resolver->error);
         goto winrt_async_done;
     }
 
@@ -301,7 +301,7 @@ bool proxy_resolver_winrt_get_proxies_for_url(void *ctx, const char *url) {
         uri = create_uri_from_string(url);
         if (!uri) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "uri", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "uri", proxy_resolver->error);
             goto winrt_done;
         }
 
@@ -309,7 +309,7 @@ bool proxy_resolver_winrt_get_proxies_for_url(void *ctx, const char *url) {
         proxy_resolver->complete_handler = (async_complete_handler_s *)malloc(sizeof(async_complete_handler_s));
         if (!proxy_resolver->complete_handler) {
             proxy_resolver->error = ERROR_OUTOFMEMORY;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "async op", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "async op", proxy_resolver->error);
             goto winrt_done;
         }
 

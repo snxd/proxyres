@@ -32,7 +32,7 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
     error = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_INCLUDE_GATEWAYS, 0, NULL, &buffer_size);
     if (error != ERROR_SUCCESS && error != ERROR_BUFFER_OVERFLOW) {
-        LOG_ERROR("Unable to allocate memory for %s (%lu)\n", "adapter info", error);
+        log_error("Unable to allocate memory for %s (%lu)", "adapter info", error);
         return false;
     }
 
@@ -43,7 +43,7 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     error = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_INCLUDE_GATEWAYS, 0,
                                  (IP_ADAPTER_ADDRESSES *)buffer, &required_size);
     if (error != ERROR_SUCCESS) {
-        LOG_ERROR("Unable to get adapter info (%lu / %lu:%lu)\n", error, buffer_size, required_size);
+        log_error("Unable to get adapter info (%lu / %lu:%lu)", error, buffer_size, required_size);
         goto net_adapter_cleanup;
     }
 

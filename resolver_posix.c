@@ -61,12 +61,12 @@ static char *proxy_resolver_posix_wpad_discover(void) {
         g_proxy_resolver_posix.auto_config_url = NULL;
 
         // Detect proxy auto configuration using DHCP
-        LOG_INFO("Discovering proxy auto config using WPAD (%s)\n", "DHCP");
+        log_info("Discovering proxy auto config using WPAD (%s)", "DHCP");
         auto_config_url = wpad_dhcp(WPAD_DHCP_TIMEOUT);
 
         // Detect proxy auto configuration using DNS
         if (!auto_config_url) {
-            LOG_INFO("Discovering proxy auto config using WPAD (%s)\n", "DNS");
+            log_info("Discovering proxy auto config using WPAD (%s)", "DNS");
             script = wpad_dns(NULL);
             if (script) {
                 g_proxy_resolver_posix.script = script;
@@ -98,11 +98,11 @@ static char *proxy_resolver_posix_fetch_pac(const char *auto_config_url, int32_t
         // Use cached version of the PAC script
         script = g_proxy_resolver_posix.script;
     } else {
-        LOG_INFO("Fetching proxy auto config script from %s\n", auto_config_url);
+        log_info("Fetching proxy auto config script from %s", auto_config_url);
 
         script = fetch_get(auto_config_url, error);
         if (!script)
-            LOG_ERROR("Unable to fetch proxy auto config script %s (%" PRId32 ")\n", auto_config_url, *error);
+            log_error("Unable to fetch proxy auto config script %s (%" PRId32 ")", auto_config_url, *error);
 
         free(g_proxy_resolver_posix.script);
         g_proxy_resolver_posix.script = script;
@@ -143,13 +143,13 @@ bool proxy_resolver_posix_get_proxies_for_url(void *ctx, const char *url) {
         proxy_execute = proxy_execute_create();
         if (!proxy_execute) {
             proxy_resolver->error = ENOMEM;
-            LOG_ERROR("Unable to allocate memory for %s (%" PRId32 ")\n", "execute object", proxy_resolver->error);
+            log_error("Unable to allocate memory for %s (%" PRId32 ")", "execute object", proxy_resolver->error);
             goto posix_done;
         }
 
         if (!proxy_execute_get_proxies_for_url(proxy_execute, g_proxy_resolver_posix.script, url)) {
             proxy_resolver->error = proxy_execute_get_error(proxy_execute);
-            LOG_ERROR("Unable to get proxies for url (%" PRId32 ")\n", proxy_resolver->error);
+            log_error("Unable to get proxies for url (%" PRId32 ")", proxy_resolver->error);
             goto posix_done;
         }
 

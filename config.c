@@ -125,7 +125,7 @@ bool proxy_config_global_init(void) {
         g_proxy_config.proxy_config_i = proxy_config_win_get_interface();
 #endif
     if (!g_proxy_config.proxy_config_i) {
-        LOG_ERROR("No config interface found\n");
+        log_error("No config interface found");
         return false;
     }
     g_proxy_config.ref_count++;
