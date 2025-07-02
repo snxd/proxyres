@@ -75,7 +75,7 @@ static char *js_string_dup_to_utf8(JSStringRef str) {
     return utf8_string;
 }
 
-double js_object_get_double_property(JSContextRef ctx, JSObjectRef object, char *name, JSValueRef *exception) {
+double js_object_get_double_property(JSContextRef ctx, JSObjectRef object, const char *name, JSValueRef *exception) {
     JSValueRef property = NULL;
 
     JSStringRef name_string = g_proxy_execute_jscore.JSStringCreateWithUTF8CString(name);
@@ -89,7 +89,8 @@ double js_object_get_double_property(JSContextRef ctx, JSObjectRef object, char 
     return 0;
 }
 
-JSStringRef js_object_get_string_property(JSContextRef ctx, JSObjectRef object, char *name, JSValueRef *exception) {
+JSStringRef js_object_get_string_property(JSContextRef ctx, JSObjectRef object, const char *name,
+                                          JSValueRef *exception) {
     JSValueRef property = NULL;
 
     JSStringRef name_string = g_proxy_execute_jscore.JSStringCreateWithUTF8CString(name);
