@@ -1689,9 +1689,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pm2@npm:^6.0.8":
-  version: 6.0.8
-  resolution: "pm2@npm:6.0.8"
+"pm2@npm:^6.0.9":
+  version: 6.0.9
+  resolution: "pm2@npm:6.0.9"
   dependencies:
     "@pm2/agent": "npm:~2.1.1"
     "@pm2/io": "npm:~6.1.0"
@@ -1731,7 +1731,7 @@ __metadata:
     pm2-dev: bin/pm2-dev
     pm2-docker: bin/pm2-docker
     pm2-runtime: bin/pm2-runtime
-  checksum: 10c0/5b19ac7b1ed9f300c8549b372b95b825fb00302c402d3f6fc9b9cd31518a38035b12159f0aebc5c103aabe3d4f905716a8456bc2c17e4f5b7aedb280c9ee759c
+  checksum: 10c0/0726ac9da630a5b1466b0944f2ab0fa4abdf540545044b5cf67197b3005c3a7184cdc9aa84f705ea8ffce47604cce3c5d8d6dd46b03f9ddc45e5d5dcff0dc003
   languageName: node
   linkType: hard
 
@@ -1901,7 +1901,7 @@ __metadata:
   dependencies:
     dhcp: "https://github.com/nmoinvaz/node-dhcp.git"
     http-server: "npm:^14.1.1"
-    pm2: "npm:^6.0.8"
+    pm2: "npm:^6.0.9"
   languageName: unknown
   linkType: soft
 
