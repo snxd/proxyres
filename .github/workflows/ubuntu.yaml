@@ -66,7 +66,7 @@ jobs:
         sudo apt install -y ninja-build libpsl-dev ${{ matrix.packages }}
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Generate project
       run: |
