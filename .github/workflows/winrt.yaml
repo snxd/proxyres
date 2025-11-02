@@ -27,7 +27,7 @@ jobs:
       run: choco install curl
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Generate project
       shell: bash
