@@ -21,6 +21,10 @@ jobs:
           - name: Build - Windows Win64
             runs-on: windows-latest
 
+          - name: Build - Windows ClangCL
+            runs-on: windows-latest
+            cmake-args: -T ClangCL
+
           - name: Build - Windows GCC
             runs-on: windows-latest
             cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON

@@ -12,7 +12,6 @@
 
 #include "log.h"
 #include "net_adapter.h"
-#include "util.h"
 #include "util_win.h"
 
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
@@ -24,7 +23,7 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     ULONG buffer_size = 0;
     ULONG required_size = 0;
     ULONG error = 0;
-    net_adapter_s adapter = {0};
+    net_adapter_s adapter = {{0}};
     uint8_t *buffer = NULL;
 
     if (!callback)
