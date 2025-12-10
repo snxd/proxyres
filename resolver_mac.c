@@ -1,6 +1,8 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 
@@ -123,7 +125,6 @@ static void proxy_resolver_mac_auto_config_result_callback(void *client, CFArray
     }
 
     CFRunLoopStop(CFRunLoopGetCurrent());
-    return;
 }
 
 bool proxy_resolver_mac_get_proxies_for_url(void *ctx, const char *url) {
@@ -244,10 +245,11 @@ bool proxy_resolver_mac_delete(void **ctx) {
     proxy_resolver_mac_s *proxy_resolver = (proxy_resolver_mac_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_mac_cancel(ctx);
+    proxy_resolver_mac_cancel(*ctx);
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 
