@@ -220,10 +220,11 @@ bool proxy_resolver_posix_delete(void **ctx) {
     proxy_resolver_posix_s *proxy_resolver = (proxy_resolver_posix_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_cancel(ctx);
+    proxy_resolver_posix_cancel(*ctx);
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 

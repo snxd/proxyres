@@ -299,10 +299,11 @@ bool proxy_resolver_win8_delete(void **ctx) {
     proxy_resolver_win8_s *proxy_resolver = (proxy_resolver_win8_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_win8_cancel(ctx);
+    proxy_resolver_win8_cancel(*ctx);
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
+#include <wchar.h>
 #include <windows.h>
 #include <winhttp.h>
 
@@ -202,10 +203,11 @@ bool proxy_resolver_winxp_delete(void **ctx) {
     proxy_resolver_winxp_s *proxy_resolver = (proxy_resolver_winxp_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_winxp_cancel(ctx);
+    proxy_resolver_winxp_cancel(*ctx);
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 

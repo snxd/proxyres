@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -196,10 +197,11 @@ bool proxy_resolver_gnome3_delete(void **ctx) {
     proxy_resolver_gnome3_s *proxy_resolver = (proxy_resolver_gnome3_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_cancel(ctx);
+    proxy_resolver_gnome3_cancel(*ctx);
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 

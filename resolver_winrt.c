@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
 #include <wchar.h>
 
 #include <windows.h>
@@ -388,7 +390,7 @@ bool proxy_resolver_winrt_delete(void **ctx) {
     proxy_resolver_winrt_s *proxy_resolver = (proxy_resolver_winrt_s *)*ctx;
     if (!proxy_resolver)
         return false;
-    proxy_resolver_winrt_cancel(ctx);
+    proxy_resolver_winrt_cancel(*ctx);
     if (proxy_resolver->complete_handler) {
         proxy_resolver->complete_handler->proxy_resolver = NULL;
         if (proxy_resolver->complete_handler->async) {
@@ -399,6 +401,7 @@ bool proxy_resolver_winrt_delete(void **ctx) {
     event_delete(&proxy_resolver->complete);
     free(proxy_resolver->list);
     free(proxy_resolver);
+    *ctx = NULL;
     return true;
 }
 
