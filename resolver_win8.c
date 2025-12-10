@@ -1,8 +1,8 @@
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 
 #include <windows.h>
@@ -13,7 +13,6 @@
 #include "log.h"
 #include "resolver.h"
 #include "resolver_i.h"
-#include "resolver_winxp.h"
 #include "util.h"
 #include "util_win.h"
 
@@ -53,6 +52,8 @@ void CALLBACK proxy_resolver_win8_winhttp_status_callback(HINTERNET Internet, DW
                                                           LPVOID StatusInformation, DWORD StatusInformationLength) {
     proxy_resolver_win8_s *proxy_resolver = (proxy_resolver_win8_s *)Context;
     WINHTTP_PROXY_RESULT proxy_result = {0};
+    size_t list_len = 0;
+    int32_t max_list = 0;
 
     UNUSED(StatusInformationLength);
     UNUSED(Internet);
@@ -85,15 +86,13 @@ void CALLBACK proxy_resolver_win8_winhttp_status_callback(HINTERNET Internet, DW
     }
 
     // Allocate string to construct the proxy list into
-    int32_t max_list = proxy_result.cEntries * MAX_PROXY_URL;
+    max_list = proxy_result.cEntries * MAX_PROXY_URL;
     proxy_resolver->list = (char *)calloc(max_list, sizeof(char));
     if (!proxy_resolver->list) {
         proxy_resolver->error = ERROR_OUTOFMEMORY;
         log_error("Unable to allocate memory for %s (%" PRId32 ")", "proxy list", proxy_resolver->error);
         goto win8_async_done;
     }
-
-    size_t list_len = 0;
 
     // Construct proxy list string from WinHTTP proxy result
     for (uint32_t i = 0; i < proxy_result.cEntries; i++) {
