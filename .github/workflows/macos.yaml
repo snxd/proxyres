@@ -72,8 +72,9 @@ jobs:
         sleep 5
       working-directory: test
 
+    # Exclude wpad.dhcp tests that fail due to restricted environment on GH CI
     - name: Run wpad tests
-      run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
+      run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*" -E "gtest_proxyres-wpad.dhcp"
       working-directory: build
 
     - name: Stop test dhcp server

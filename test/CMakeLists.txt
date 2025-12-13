@@ -110,5 +110,6 @@ if(PROXYRES_BUILD_TESTS)
         ${CMAKE_SOURCE_DIR}/include/proxyres)
 
     add_test(NAME gtest_proxyres COMMAND gtest_proxyres --gtest_filter=*:-wpad*)
-    add_test(NAME gtest_proxyres-wpad COMMAND gtest_proxyres --gtest_filter=wpad*)
+    add_test(NAME gtest_proxyres-wpad COMMAND gtest_proxyres --gtest_filter=wpad*:-wpad.dhcp)
+    add_test(NAME gtest_proxyres-wpad-dhcp COMMAND gtest_proxyres --gtest_filter=wpad.dhcp)
 endif()
