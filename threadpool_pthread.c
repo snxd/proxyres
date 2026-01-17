@@ -162,11 +162,11 @@ static void *threadpool_do_work(void *arg) {
     pthread_exit(NULL);
 }
 
-static void threadpool_create_thread_on_demand(threadpool_s *threadpool) {
+static bool threadpool_create_thread_on_demand(threadpool_s *threadpool) {
     // Create new thread and add it to the list of threads
     pthread_t handle = 0;
     if (pthread_create(&handle, NULL, threadpool_do_work, threadpool))
-        return;
+        return false;
 
     threadpool_thread_s *thread = (threadpool_thread_s *)calloc(1, sizeof(threadpool_thread_s));
     thread->handle = handle;
@@ -174,6 +174,7 @@ static void threadpool_create_thread_on_demand(threadpool_s *threadpool) {
 
     threadpool->threads = thread;
     threadpool->num_threads++;
+    return true;
 }
 
 bool threadpool_enqueue(void *ctx, void *user_data, threadpool_job_cb callback) {
@@ -188,6 +189,12 @@ bool threadpool_enqueue(void *ctx, void *user_data, threadpool_job_cb callback) 
 
     // Add job to the job queue
     threadpool_enqueue_job(threadpool, job);
+
+    // Create min amount of threads
+    while (threadpool->num_threads < threadpool->min_threads) {
+        if (!threadpool_create_thread_on_demand(threadpool))
+            break;
+    }
 
     // Create new thread if all threads are busy
     if (threadpool->busy_threads == threadpool->num_threads && threadpool->num_threads < threadpool->max_threads)
