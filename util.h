@@ -17,6 +17,9 @@ int32_t str_count_chr(const char *str, char chr);
 // Trim a character from the end of the string
 int32_t str_trim_end(char *str, char c);
 
+// Collapse consecutive duplicate characters in-place
+int32_t str_collapse_chr(char *str, char c);
+
 // Find first character in string
 const char *str_find_first_char(const char *str, const char *chars);
 

@@ -53,6 +53,7 @@ list(APPEND PROXYRES_HDRS
     mutex.h
     net_util.h
     resolver_i.h
+    testing.h
     threadpool.h
     util.h)
 list(APPEND PROXYRES_SRCS
@@ -70,6 +71,7 @@ if(PROXYRES_EXECUTE)
         net_adapter.h
         resolver_posix.h
         wpad_dhcp_posix.h
+        wpad_dhcp_posix_p.h
         wpad_dhcp.h
         wpad_dns.h)
     list(APPEND PROXYRES_SRCS
@@ -254,6 +256,9 @@ endif()
 
 add_library(proxyres ${PROXYRES_HDRS} ${PROXYRES_SRCS} ${PROXYRES_C_SRCS})
 set_property(TARGET proxyres PROPERTY C_STANDARD 11 CXX_STANDARD 11)
+if(PROXYRES_BUILD_TESTS)
+    target_compile_definitions(proxyres PRIVATE PROXYRES_TESTING)
+endif()
 target_include_directories(proxyres PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/proxyres)

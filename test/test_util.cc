@@ -207,6 +207,37 @@ TEST_P(util_should_bypass, list) {
     EXPECT_EQ(should_bypass_proxy(param.url, param.bypass_list), param.expected);
 }
 
+struct str_collapse_chr_param {
+    const char *input;
+    const char *expected;
+    int32_t expected_count;
+
+    friend std::ostream &operator<<(std::ostream &os, const str_collapse_chr_param &param) {
+        return os << "input: \"" << param.input << "\"";
+    }
+};
+
+constexpr str_collapse_chr_param str_collapse_chr_tests[] = {
+    {"host..example..com", "host.example.com", 2},
+    {"host.example.com", "host.example.com", 0},
+    {"..example.com", ".example.com", 1},
+    {"....", ".", 3},
+    {"", "", 0},
+};
+
+class util_str_collapse_chr : public ::testing::TestWithParam<str_collapse_chr_param> {};
+
+INSTANTIATE_TEST_SUITE_P(util, util_str_collapse_chr, testing::ValuesIn(str_collapse_chr_tests));
+
+TEST_P(util_str_collapse_chr, collapse) {
+    const auto &param = GetParam();
+    char *str = strdup(param.input);
+    int32_t count = str_collapse_chr(str, '.');
+    EXPECT_STREQ(str, param.expected);
+    EXPECT_EQ(count, param.expected_count);
+    free(str);
+}
+
 TEST(util, str_sep_dup) {
     const char *tokens = "hi;bye";
     const char **tokenp = &tokens;
