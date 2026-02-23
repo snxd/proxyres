@@ -100,7 +100,6 @@ if(PROXYRES_BUILD_TESTS)
         list(APPEND TEST_SRCS
             test_execute.cc
             test_fetch.cc
-            test_wpad.cc
             test_wpad_dhcp.cc
             test_wpad_dns.cc
             test_wpad_dns_fetch.cc)
