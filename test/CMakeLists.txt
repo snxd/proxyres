@@ -100,16 +100,18 @@ if(PROXYRES_BUILD_TESTS)
         list(APPEND TEST_SRCS
             test_execute.cc
             test_fetch.cc
-            test_wpad.cc)
+            test_wpad.cc
+            test_wpad_dhcp.cc
+            test_wpad_dns.cc
+            test_wpad_dns_fetch.cc)
     endif()
 
     add_executable(gtest_proxyres ${TEST_SRCS})
     target_link_libraries(gtest_proxyres PRIVATE proxyres GTest::GTest)
+    target_compile_definitions(gtest_proxyres PRIVATE PROXYRES_TESTING)
     target_include_directories(gtest_proxyres PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/include/proxyres)
 
-    add_test(NAME gtest_proxyres COMMAND gtest_proxyres --gtest_filter=*:-wpad*)
-    add_test(NAME gtest_proxyres-wpad COMMAND gtest_proxyres --gtest_filter=wpad*:-wpad.dhcp)
-    add_test(NAME gtest_proxyres-wpad-dhcp COMMAND gtest_proxyres --gtest_filter=wpad.dhcp)
+    add_test(NAME gtest_proxyres COMMAND gtest_proxyres)
 endif()

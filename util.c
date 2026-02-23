@@ -50,6 +50,24 @@ int32_t str_trim_end(char *str, char c) {
     return count;
 }
 
+// Collapse consecutive duplicate characters in-place
+int32_t str_collapse_chr(char *str, char c) {
+    int32_t count = 0;
+    char *dst = str;
+    char prev = 0;
+    while (*str) {
+        if (*str == c && prev == c) {
+            str++;
+            count++;
+        } else {
+            prev = *str;
+            *dst++ = *str++;
+        }
+    }
+    *dst = 0;
+    return count;
+}
+
 // Find first character in string
 const char *str_find_first_char(const char *str, const char *chars) {
     while (*str) {

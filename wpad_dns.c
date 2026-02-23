@@ -29,10 +29,88 @@
 #  define socketerr errno
 #endif
 
+#ifdef PROXYRES_TESTING
+static wpad_dns_fetch_func wpad_dns_fetch = fetch_get;
+#endif
+
+// Generate NULL-terminated array of WPAD URLs from an FQDN
+char **wpad_dns_get_urls(const char *fqdn, int32_t *count) {
+    if (!fqdn || !*fqdn)
+        return NULL;
+
+    // Count the number of dots to determine max url count
+    int32_t max_urls = 0;
+    const char *name = fqdn;
+    while ((name = strchr(name, '.')) != NULL) {
+        max_urls++;
+        name++;
+    }
+
+    if (max_urls == 0)
+        return NULL;
+
+    // Allocate array (max_urls entries + NULL terminator)
+    char **urls = (char **)calloc(max_urls + 1, sizeof(char *));
+    if (!urls)
+        return NULL;
+
+    int32_t num_urls = 0;
+    name = fqdn;
+    while (num_urls < max_urls) {
+        // Skip empty labels (consecutive dots or leading dot)
+        while (*name == '.')
+            name++;
+
+        const char *dot = strchr(name, '.');
+        if (!dot)
+            break;
+
+        const char *next_part = dot + 1;
+
+        // Skip trailing dot (next_part is empty)
+        if (!*next_part)
+            break;
+
+        // Compute suffix length, excluding any trailing dot
+        size_t name_len = strlen(name);
+        if (name[name_len - 1] == '.')
+            name_len--;
+
+        size_t wpad_url_len = 12 + name_len + 9 + 1;  // "http://wpad." + name + "/wpad.dat"
+        urls[num_urls] = (char *)calloc(wpad_url_len, sizeof(char));
+        if (!urls[num_urls]) {
+            wpad_dns_free_urls(urls);
+            return NULL;
+        }
+        snprintf(urls[num_urls], wpad_url_len, "http://wpad.%.*s/wpad.dat", (int)name_len, name);
+        str_collapse_chr(urls[num_urls], '.');
+        num_urls++;
+        name = next_part;
+    }
+
+    if (num_urls == 0) {
+        free(urls);
+        return NULL;
+    }
+
+    urls[num_urls] = NULL;
+    if (count)
+        *count = num_urls;
+    return urls;
+}
+
+// Free NULL-terminated array of WPAD URLs
+void wpad_dns_free_urls(char **urls) {
+    if (!urls)
+        return;
+    for (int32_t i = 0; urls[i]; i++)
+        free(urls[i]);
+    free(urls);
+}
+
 // Request WPAD script using DNS
 char *wpad_dns(const char *fqdn) {
     char hostname[HOST_MAX] = {0};
-    char wpad_host[HOST_MAX] = {0};
     int32_t error = 0;
 
     if (!fqdn) {
@@ -60,28 +138,29 @@ char *wpad_dns(const char *fqdn) {
         }
     }
 
-    // Enumerate through each part of the FQDN
-    const char *name = fqdn;
-    const char *next_part;
-    do {
-        next_part = strchr(name, '.');
-        if (!next_part)
-            break;
-        next_part++;
+    char **urls = wpad_dns_get_urls(fqdn, NULL);
+    if (!urls)
+        return NULL;
 
-        // Construct WPAD url with next part of FQDN
-        snprintf(wpad_host, sizeof(wpad_host), "wpad.%s", name);
-        log_info("Checking next WPAD hostname: %s", wpad_host);
-
-        char wpad_url[HOST_MAX + 18];
-        snprintf(wpad_url, sizeof(wpad_url), "http://%s/wpad.dat", wpad_host);
-        char *script = fetch_get(wpad_url, &error);
+    char *script = NULL;
+    for (int32_t i = 0; urls[i]; i++) {
+        log_info("Checking next WPAD URL: %s", urls[i]);
+#ifdef PROXYRES_TESTING
+        script = wpad_dns_fetch(urls[i], &error);
+#else
+        script = fetch_get(urls[i], &error);
+#endif
         if (script)
-            return script;
+            break;
+        log_info("No server found at %s (%d)", urls[i], error);
+    }
 
-        log_info("No server found at %s (%d)", wpad_host, error);
-        name = next_part;
-    } while (true);
-
-    return NULL;
+    wpad_dns_free_urls(urls);
+    return script;
 }
+
+#ifdef PROXYRES_TESTING
+void wpad_dns_set_fetch_func(wpad_dns_fetch_func func) {
+    wpad_dns_fetch = func ? func : fetch_get;
+}
+#endif
