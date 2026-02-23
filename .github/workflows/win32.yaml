@@ -69,42 +69,14 @@ jobs:
     - name: Build project
       run: cmake --build build --config RelWithDebInfo
 
-    - name: Setup node version
-      uses: actions/setup-node@v6
-      with:
-        node-version: 20
-
-    - name: Install test dependencies
-      run: |
-        corepack enable
-        yarn install
-      working-directory: test
-
     - name: Run test http server
       shell: bash
-      run: |
-        npx pm2 start http_server_cmd.js
-        sleep 15
+      run: python3 -m http.server 8080 &
       working-directory: test
 
     - name: Run tests
-      run: ctest --verbose -C RelWithDebInfo -E ".*wpad.*"
+      run: ctest --verbose -C RelWithDebInfo
       working-directory: build
-
-    - name: Run test dhcp server
-      # Used by wpad.dhcp googletest
-      run: |
-        npx pm2 start dhcp_server_cmd.js --output dhcp_server.log
-        sleep 15
-      working-directory: test
-
-    - name: Run wpad tests
-      run: ctest --verbose -C RelWithDebInfo -R ".*wpad.*"
-      working-directory: build
-
-    - name: Stop test dhcp server
-      run: npx pm2 stop dhcp_server_cmd
-      working-directory: test
 
     - name: Download pac from http server
       run: curl -v http://127.0.0.1:8080/pac.js
