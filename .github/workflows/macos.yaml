@@ -45,7 +45,7 @@ jobs:
       run: cmake --build build --config RelWithDebInfo
 
     - name: Run test http server
-      run: python3 -m http.server 8080 &
+      run: ./pac_server.sh
       working-directory: test
 
     - name: Run tests
