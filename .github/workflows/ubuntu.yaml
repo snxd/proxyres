@@ -283,7 +283,7 @@ jobs:
         CODECOV_TOKEN: "${{ secrets.CODECOV_TOKEN }}"
 
     - name: Upload build errors
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: Build Errors - ${{ matrix.name }}
