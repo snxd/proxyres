@@ -159,7 +159,7 @@ static void *threadpool_do_work(void *arg) {
 
     pthread_cond_signal(&threadpool->lazy_cond);
     pthread_mutex_unlock(&threadpool->queue_mutex);
-    pthread_exit(NULL);
+    return NULL;
 }
 
 static bool threadpool_create_thread_on_demand(threadpool_s *threadpool) {
