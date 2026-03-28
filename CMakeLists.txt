@@ -40,7 +40,8 @@ set(PROXYRES_HDRS
     include/proxyres/config.h
     include/proxyres/log.h
     include/proxyres/proxyres.h
-    include/proxyres/resolver.h)
+    include/proxyres/resolver.h
+    ${PROJECT_BINARY_DIR}/proxyres_config.h)
 if(PROXYRES_EXECUTE)
     list(APPEND PROXYRES_HDRS
         include/proxyres/execute.h)
@@ -254,6 +255,13 @@ if(PROXYRES_USE_CXX)
     endif()
 endif()
 
+if(NOT WIN32)
+    check_include_file("net/if_arp.h" HAVE_NET_IF_ARP_H)
+    check_include_file("netdb.h" HAVE_NETDB_H)
+endif()
+
+configure_file(proxyres_config.h.in proxyres_config.h @ONLY NEWLINE_STYLE UNIX)
+
 add_library(proxyres ${PROXYRES_HDRS} ${PROXYRES_SRCS} ${PROXYRES_C_SRCS})
 set_property(TARGET proxyres PROPERTY C_STANDARD 11 CXX_STANDARD 11)
 if(PROXYRES_BUILD_TESTS)
@@ -261,16 +269,10 @@ if(PROXYRES_BUILD_TESTS)
 endif()
 target_include_directories(proxyres PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/proxyres)
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/proxyres
+    ${PROJECT_BINARY_DIR})
 target_include_directories(proxyres PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
-if(NOT WIN32)
-    check_include_file("net/if_arp.h" HAVE_NET_IF_ARP_H)
-    if(HAVE_NET_IF_ARP_H)
-        target_compile_definitions(proxyres PRIVATE HAVE_NET_IF_ARP_H)
-    endif()
-endif()
 
 if(PROXYRES_CURL AND (PROXYRES_EXECUTE OR PROXYRES_BUILD_CLI))
     if(NOT TARGET CURL::libcurl)

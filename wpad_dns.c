@@ -1,3 +1,5 @@
+#include "proxyres_config.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -6,6 +8,10 @@
 #include <string.h>
 #include <errno.h>
 
+#if HAVE_NETDB_H
+#  include <netdb.h>
+#endif
+
 #ifdef _WIN32
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
@@ -13,7 +19,6 @@
 #else
 #  include <sys/types.h>
 #  include <sys/socket.h>
-#  include <netdb.h>
 #  include <unistd.h>
 #endif
 
