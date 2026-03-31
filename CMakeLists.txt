@@ -258,6 +258,7 @@ endif()
 if(NOT WIN32)
     check_include_file("net/if_arp.h" HAVE_NET_IF_ARP_H)
     check_include_file("netdb.h" HAVE_NETDB_H)
+    check_include_file("netinet/in.h" HAVE_NETINET_IN_H)
 endif()
 
 configure_file(proxyres_config.h.in proxyres_config.h @ONLY NEWLINE_STYLE UNIX)
