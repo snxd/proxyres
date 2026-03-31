@@ -12,6 +12,10 @@
 #  include <netdb.h>
 #endif
 
+#if HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+#endif
+
 #ifdef _WIN32
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
