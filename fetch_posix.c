@@ -37,7 +37,7 @@
 char *fetch_get(const char *url, int32_t *error) {
     struct addrinfo hints = {0};
     struct addrinfo *address_info = NULL;
-    SOCKET sfd = 0;
+    SOCKET sfd = -1;
     char *body = NULL;
     char *host = NULL;
     int32_t err = 0;
@@ -182,7 +182,7 @@ char *fetch_get(const char *url, int32_t *error) {
 download_cleanup:
     if (address_info)
         freeaddrinfo(address_info);
-    if (sfd)
+    if (sfd != -1)
         closesocket(sfd);
 
     free(host);
