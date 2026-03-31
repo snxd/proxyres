@@ -35,8 +35,13 @@
 
 // Fetch proxy auto configuration using HTTP only
 char *fetch_get(const char *url, int32_t *error) {
+    const int32_t socktype = SOCK_STREAM;
+    const int32_t protocol = IPPROTO_TCP;
+
     struct addrinfo hints = {0};
     struct addrinfo *address_info = NULL;
+    struct sockaddr *addr = NULL;
+    socklen_t addrlen = 0;
     SOCKET sfd = -1;
     char *body = NULL;
     char *host = NULL;
@@ -72,8 +77,8 @@ char *fetch_get(const char *url, int32_t *error) {
 
     // Attempt to resolve the host name
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_socktype = socktype;
+    hints.ai_protocol = protocol;
 
     err = getaddrinfo(host, port, &hints, &address_info);
     if (err != 0) {
@@ -82,8 +87,11 @@ char *fetch_get(const char *url, int32_t *error) {
         goto download_cleanup;
     }
 
+    addr = address_info->ai_addr;
+    addrlen = address_info->ai_addrlen;
+
     // Create communication socket
-    sfd = socket(address_info->ai_family, address_info->ai_socktype, address_info->ai_protocol);
+    sfd = socket(addr->sa_family, socktype, protocol);
     if ((int)sfd == -1) {
         err = socketerr;
         log_error("Unable to create socket (%" PRId32 ")", err);
@@ -91,7 +99,7 @@ char *fetch_get(const char *url, int32_t *error) {
     }
 
     // Connect to remote address
-    err = connect(sfd, address_info->ai_addr, (int)address_info->ai_addrlen);
+    err = connect(sfd, addr, addrlen);
     if (err != 0) {
         err = socketerr;
         log_debug("Unable to connect to host %s (%" PRId32 ")", host, err);
