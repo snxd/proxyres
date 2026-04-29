@@ -49,7 +49,8 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
         int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
         if (fd) {
-            struct ifreq ifr = {0};
+            struct ifreq ifr;
+            memset(&ifr, 0, sizeof(ifr));
 
             ifr.ifr_ifindex = if_nametoindex(ifa->ifa_name);
 
