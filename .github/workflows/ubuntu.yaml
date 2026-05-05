@@ -41,6 +41,15 @@ jobs:
             gcov-exec: llvm-cov-15 gcov
             codecov: ubuntu
 
+          - name: Build - Ubuntu 26 Clang
+            runs-on: ubuntu-26.04
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON
+            packages: llvm-21 libjavascriptcoregtk-6.0-dev gsettings-desktop-schemas
+            gcov-exec: llvm-cov-21 gcov
+            codecov: ubuntu
+
           - name: Build - Ubuntu Clang (curl)
             runs-on: ubuntu-latest
             compiler: clang
@@ -50,6 +59,15 @@ jobs:
             gcov-exec: llvm-cov-15 gcov
             codecov: ubuntu_curl
 
+          - name: Build - Ubuntu 26 Clang (curl)
+            runs-on: ubuntu-26.04
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_CURL=ON
+            packages: llvm-21 libjavascriptcoregtk-6.0-dev gsettings-desktop-schemas
+            gcov-exec: llvm-cov-21 gcov
+            codecov: ubuntu_curl
+
           - name: Build - Ubuntu Clang (duktape)
             runs-on: ubuntu-latest
             compiler: clang
@@ -57,6 +75,15 @@ jobs:
             cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
             packages: llvm-15 libglib2.0-dev gsettings-desktop-schemas
             gcov-exec: llvm-cov-15 gcov
+            codecov: ubuntu_duktape
+
+          - name: Build - Ubuntu 26 Clang (duktape)
+            runs-on: ubuntu-26.04
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Ninja -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
+            packages: llvm-21 libglib2.0-dev gsettings-desktop-schemas
+            gcov-exec: llvm-cov-21 gcov
             codecov: ubuntu_duktape
 
     steps:

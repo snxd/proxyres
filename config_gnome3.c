@@ -25,11 +25,26 @@ typedef struct g_proxy_config_gnome3_s {
     // Glib module handle
     void *glib_module;
     // Glib memory functions
+#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+    void (*g_free_sized)(gpointer mem, size_t size);
+#endif
     void (*g_free)(gpointer mem);
     void (*g_strfreev)(gchar **str_array);
 } g_proxy_config_gnome3_s;
 
 g_proxy_config_gnome3_s g_proxy_config_gnome3;
+
+#ifdef g_free
+#  undef g_free
+#  if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#    define g_free(mem)                                                                \
+        (__builtin_object_size((mem), 0) != ((size_t)-1))                              \
+            ? g_proxy_config_gnome3.g_free_sized(mem, __builtin_object_size((mem), 0)) \
+            : (g_proxy_config_gnome3.g_free)(mem)
+#  else
+#    define gfree(mem) (g_proxy_config_gnome3.g_free)(mem)
+#  endif
+#endif
 
 static bool proxy_config_gnome3_is_mode(const char *mode) {
     bool equal = false;
@@ -41,7 +56,7 @@ static bool proxy_config_gnome3_is_mode(const char *mode) {
     char *system_mode = g_proxy_config_gnome3.g_settings_get_string(settings, "mode");
     if (system_mode) {
         equal = strcmp(system_mode, mode) == 0;
-        g_proxy_config_gnome3.g_free(system_mode);
+        g_free(system_mode);
     }
     g_proxy_config_gnome3.g_object_unref(settings);
     return equal;
@@ -63,7 +78,7 @@ char *proxy_config_gnome3_get_auto_config_url(void) {
     if (url) {
         if (*url)
             auto_config_url = strdup(url);
-        g_proxy_config_gnome3.g_free(url);
+        g_free(url);
     }
     g_proxy_config_gnome3.g_object_unref(settings);
     return auto_config_url;
@@ -108,7 +123,7 @@ char *proxy_config_gnome3_get_proxy(const char *scheme) {
                 snprintf(proxy, max_proxy, "%s:%" PRIu32 "", host, port);
         }
 
-        g_proxy_config_gnome3.g_free(host);
+        g_free(host);
     }
     g_proxy_config_gnome3.g_object_unref(settings);
     return proxy;
@@ -162,9 +177,15 @@ bool proxy_config_gnome3_global_init(void) {
         goto gnome3_init_error;
 
     // Glib functions
-    g_proxy_config_gnome3.g_free = (void (*)(gpointer))dlsym(g_proxy_config_gnome3.glib_module, "g_free");
+    (g_proxy_config_gnome3.g_free) = (void (*)(gpointer))dlsym(g_proxy_config_gnome3.glib_module, "g_free");
     if (!g_proxy_config_gnome3.g_free)
         goto gnome3_init_error;
+#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+    g_proxy_config_gnome3.g_free_sized =
+        (void (*)(gpointer, size_t))dlsym(g_proxy_config_gnome3.glib_module, "g_free_sized");
+    if (!g_proxy_config_gnome3.g_free_sized)
+        goto gnome3_init_error;
+#endif
     g_proxy_config_gnome3.g_strfreev = (void (*)(gchar **))dlsym(g_proxy_config_gnome3.glib_module, "g_strfreev");
     if (!g_proxy_config_gnome3.g_strfreev)
         goto gnome3_init_error;
