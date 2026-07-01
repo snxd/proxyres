@@ -53,7 +53,7 @@ jobs:
         choco install ninja --no-progress
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Generate project
       shell: bash
