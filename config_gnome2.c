@@ -27,12 +27,27 @@ typedef struct g_proxy_config_gnome2_s {
     // Glib module handle
     void *glib_module;
     // Glib memory functions
-    void (*g_free)(gpointer Mem);
+#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+    void (*g_free_sized)(gpointer mem, size_t size);
+#endif
+    void (*g_free)(gpointer mem);
     void (*g_slist_foreach)(GSList *list, GFunc func, gpointer user_data);
     void (*g_slist_free_full)(GSList *list, GDestroyNotify free_func);
 } g_proxy_config_gnome2_s;
 
 g_proxy_config_gnome2_s g_proxy_config_gnome2;
+
+#ifdef g_free
+#  undef g_free
+#  if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#    define g_free(mem)                                                                  \
+        (__builtin_object_size((mem), 0) != ((size_t)-1))                                \
+            ? (g_proxy_config_gnome2.g_free_sized)(mem, __builtin_object_size((mem), 0)) \
+            : (g_proxy_config_gnome2.g_free)(mem)
+#  else
+#    define g_free(mem) (g_proxy_config_gnome2.g_free)(mem)
+#  endif
+#endif
 
 static bool proxy_config_gnome2_is_mode(const char *mode) {
     bool equal = false;
@@ -41,7 +56,7 @@ static bool proxy_config_gnome2_is_mode(const char *mode) {
         g_proxy_config_gnome2.gconf_engine_get_string(g_proxy_config_gnome2.gconf_default, "/system/proxy/mode", NULL);
     if (system_mode) {
         equal = strcmp(system_mode, mode) == 0;
-        g_proxy_config_gnome2.g_free(system_mode);
+        g_free(system_mode);
     }
     return equal;
 }
@@ -62,7 +77,7 @@ char *proxy_config_gnome2_get_auto_config_url(void) {
     if (url) {
         if (*url)
             auto_config_url = strdup(url);
-        g_proxy_config_gnome2.g_free(url);
+        g_free(url);
     }
 
     return auto_config_url;
@@ -102,7 +117,7 @@ char *proxy_config_gnome2_get_proxy(const char *scheme) {
                 snprintf(proxy, max_proxy, "%s:%" PRIu32 "", host, port);
         }
 
-        g_proxy_config_gnome2.g_free(host);
+        g_free(host);
     }
     return proxy;
 }
@@ -174,9 +189,15 @@ bool proxy_config_gnome2_global_init(void) {
         goto gnome2_init_error;
 
     // Glib functions
-    g_proxy_config_gnome2.g_free = (void (*)(gpointer))dlsym(g_proxy_config_gnome2.glib_module, "g_free");
+    (g_proxy_config_gnome2.g_free) = (void (*)(gpointer))dlsym(g_proxy_config_gnome2.glib_module, "g_free");
     if (!g_proxy_config_gnome2.g_free)
         goto gnome2_init_error;
+#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+    g_proxy_config_gnome2.g_free_sized =
+        (void (*)(gpointer, size_t))dlsym(g_proxy_config_gnome2.glib_module, "g_free_sized");
+    if (!g_proxy_config_gnome2.g_free_sized)
+        goto gnome2_init_error;
+#endif
     g_proxy_config_gnome2.g_slist_free_full =
         (void (*)(GSList *, GDestroyNotify))dlsym(g_proxy_config_gnome2.glib_module, "g_slist_free_full");
     if (!g_proxy_config_gnome2.g_slist_free_full)
