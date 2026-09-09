@@ -42,10 +42,13 @@ g_proxy_config_gnome3_s g_proxy_config_gnome3;
 // This cannot be a dispatching function. Cause: `__builtin_object_size(mem, 0)`
 // must run at the call site, otherwise the compiler would not recover the
 // allocation size at .
-#  define glib_free(mem)                                                             \
-      (__builtin_object_size((mem), 0) != ((size_t)-1))                              \
-          ? g_proxy_config_gnome3.g_free_sized(mem, __builtin_object_size((mem), 0)) \
-          : g_proxy_config_gnome3.free(mem)
+#  define glib_free(mem)                                                                 \
+      do {                                                                               \
+          gpointer mem_ = (mem);                                                         \
+          (__builtin_object_size(mem_, 0) != ((size_t)-1))                               \
+              ? g_proxy_config_gnome3.g_free_sized(mem_, __builtin_object_size(mem_, 0)) \
+              : g_proxy_config_gnome3.free(mem_);                                        \
+      } while (false)
 #else
 #  define glib_free(mem) g_proxy_config_gnome3.free(mem)
 #endif
