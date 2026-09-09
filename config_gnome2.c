@@ -13,6 +13,10 @@
 #include "config_gnome2.h"
 #include "util.h"
 
+#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#  define HAVE_G_FREE_SIZED 1
+#endif
+
 typedef struct g_proxy_config_gnome2_s {
     // GConf module handle
     void *gconf_module;
@@ -27,7 +31,7 @@ typedef struct g_proxy_config_gnome2_s {
     // Glib module handle
     void *glib_module;
     // Glib memory functions
-#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#if HAVE_G_FREE_SIZED
     void (*g_free_sized)(gpointer mem, size_t size);
 #endif
     void (*free)(gpointer mem);  // `g_free` is a macro since Glib 2.78
@@ -37,7 +41,7 @@ typedef struct g_proxy_config_gnome2_s {
 
 g_proxy_config_gnome2_s g_proxy_config_gnome2;
 
-#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#if HAVE_G_FREE_SIZED
 // This cannot be a dispatching function. Cause: `__builtin_object_size(mem, 0)`
 // must run at the call site, otherwise the compiler would not recover the
 // allocation size at .
@@ -192,7 +196,7 @@ bool proxy_config_gnome2_global_init(void) {
     g_proxy_config_gnome2.free = (void (*)(gpointer))dlsym(g_proxy_config_gnome2.glib_module, "g_free");
     if (!g_proxy_config_gnome2.free)
         goto gnome2_init_error;
-#if G_GNUC_CHECK_VERSION(4, 1) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_78 && defined(G_HAVE_FREE_SIZED)
+#if HAVE_G_FREE_SIZED
     g_proxy_config_gnome2.g_free_sized =
         (void (*)(gpointer, size_t))dlsym(g_proxy_config_gnome2.glib_module, "g_free_sized");
     if (!g_proxy_config_gnome2.g_free_sized)
