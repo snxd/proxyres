@@ -20,6 +20,7 @@
 #include "resolver_i.h"
 #if defined(__APPLE__)
 #  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
+#    include "threadpool.h"  // NOLINT
 #    include "resolver_posix.h"
 #  else
 #    include "resolver_mac.h"
@@ -27,10 +28,12 @@
 #elif defined(__linux__)
 // #  include "resolver_gnome3.h"
 #  ifdef PROXYRES_EXECUTE
+#    include "threadpool.h"  // NOLINT
 #    include "resolver_posix.h"
 #  endif
 #elif defined(_WIN32)
 #  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
+#    include "threadpool.h"  // NOLINT
 #    include "resolver_posix.h"
 #  elif WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
 #    include "resolver_winxp.h"
@@ -52,7 +55,7 @@ typedef struct g_proxy_resolver_s {
     // Proxy resolver interface
     const proxy_resolver_i_s *proxy_resolver_i;
     // Thread pool
-    void *threadpool;
+    threadpool_s *threadpool;
 } g_proxy_resolver_s;
 
 g_proxy_resolver_s g_proxy_resolver;

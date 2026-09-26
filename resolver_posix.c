@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <time.h>
 
+#include "threadpool.h"  // NOLINT
+
 #include "config.h"
 #include "event.h"
 #include "fetch.h"
@@ -17,7 +19,6 @@
 #include "resolver.h"
 #include "resolver_i.h"
 #include "resolver_posix.h"
-#include "threadpool.h"
 #include "util.h"
 #include "wpad_dhcp.h"
 #include "wpad_dns.h"
@@ -250,7 +251,7 @@ bool proxy_resolver_posix_global_init(void) {
     return proxy_resolver_posix_init_ex(NULL);
 }
 
-bool proxy_resolver_posix_init_ex(void *threadpool) {
+bool proxy_resolver_posix_init_ex(threadpool_s *threadpool) {
     g_proxy_resolver_posix.mutex = mutex_create();
     if (!g_proxy_resolver_posix.mutex)
         return false;

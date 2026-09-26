@@ -100,9 +100,7 @@ VOID CALLBACK threadpool_job_callback(PTP_CALLBACK_INSTANCE instance, PVOID cont
     mutex_unlock(threadpool->queue_lock);
 }
 
-bool threadpool_enqueue(void *ctx, void *user_data, threadpool_job_cb callback) {
-    threadpool_s *threadpool = (threadpool_s *)ctx;
-
+bool threadpool_enqueue(threadpool_s *threadpool, void *user_data, threadpool_job_cb callback) {
     threadpool_job_s *job = threadpool_job_create(user_data, callback);
     if (!job)
         return false;
@@ -122,8 +120,7 @@ bool threadpool_enqueue(void *ctx, void *user_data, threadpool_job_cb callback) 
     return true;
 }
 
-void threadpool_wait(void *ctx) {
-    threadpool_s *threadpool = (threadpool_s *)ctx;
+void threadpool_wait(threadpool_s *threadpool) {
     threadpool_job_s *job = NULL;
     PTP_WORK work_handle = NULL;
 
@@ -142,7 +139,7 @@ void threadpool_wait(void *ctx) {
     }
 }
 
-void *threadpool_create(int32_t min_threads, int32_t max_threads) {
+threadpool_s *threadpool_create(int32_t min_threads, int32_t max_threads) {
     threadpool_s *threadpool = (threadpool_s *)calloc(1, sizeof(threadpool_s));
     if (!threadpool)
         return NULL;
@@ -171,10 +168,10 @@ void *threadpool_create(int32_t min_threads, int32_t max_threads) {
     return threadpool;
 }
 
-bool threadpool_delete(void **ctx) {
+bool threadpool_delete(threadpool_s **ctx) {
     if (!ctx)
         return false;
-    threadpool_s *threadpool = (threadpool_s *)*ctx;
+    threadpool_s *threadpool = *ctx;
     if (!threadpool)
         return false;
     if (threadpool->handle)
