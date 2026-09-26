@@ -60,7 +60,7 @@ static bool threadpool_job_delete(threadpool_job_s **job) {
     return true;
 }
 
-static bool threadpool_enqueue_job(threadpool_s *threadpool, threadpool_job_s *job) {
+static void threadpool_enqueue_job(threadpool_s *threadpool, threadpool_job_s *job) {
     log_debug("threadpool - job 0x%" PRIxPTR " - enqueue", (intptr_t)job);
 
     // Add job to the end of the queue
@@ -72,7 +72,6 @@ static bool threadpool_enqueue_job(threadpool_s *threadpool, threadpool_job_s *j
         threadpool->queue_last = job;
     }
     threadpool->queue_count++;
-    return true;
 }
 
 static threadpool_job_s *threadpool_dequeue_job(threadpool_s *threadpool) {
@@ -178,15 +177,14 @@ static bool threadpool_create_thread_on_demand(threadpool_s *threadpool) {
 }
 
 bool threadpool_enqueue(threadpool_s *threadpool, void *user_data, threadpool_job_cb callback) {
+    bool ret = false;
+
     // Create new job
     threadpool_job_s *job = threadpool_job_create(user_data, callback);
     if (!job)
         return false;
 
     pthread_mutex_lock(&threadpool->queue_mutex);
-
-    // Add job to the job queue
-    threadpool_enqueue_job(threadpool, job);
 
     // Create min amount of threads
     while (threadpool->num_threads < threadpool->min_threads) {
@@ -198,11 +196,22 @@ bool threadpool_enqueue(threadpool_s *threadpool, void *user_data, threadpool_jo
     if (threadpool->busy_threads == threadpool->num_threads && threadpool->num_threads < threadpool->max_threads)
         threadpool_create_thread_on_demand(threadpool);
 
+    ret = threadpool->num_threads > 0;
+    if (ret) {
+        // Add job to the job queue
+        threadpool_enqueue_job(threadpool, job);
+    } else {
+        threadpool_job_delete(&job);
+    }
+
     pthread_mutex_unlock(&threadpool->queue_mutex);
 
-    // Wake up waiting threads
-    pthread_cond_broadcast(&threadpool->wakeup_cond);
-    return true;
+    if (ret) {
+        // Wake up waiting threads
+        pthread_cond_broadcast(&threadpool->wakeup_cond);
+    }
+
+    return ret;
 }
 
 static void threadpool_delete_threads(threadpool_s *threadpool) {
