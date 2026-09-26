@@ -252,6 +252,11 @@ void threadpool_wait(threadpool_s *threadpool) {
 }
 
 threadpool_s *threadpool_create(int32_t min_threads, int32_t max_threads) {
+    if (min_threads < 0 || max_threads < 1)
+        return NULL;
+    if (min_threads > max_threads)
+        min_threads = max_threads;
+
     threadpool_s *threadpool = (threadpool_s *)calloc(1, sizeof(threadpool_s));
     if (!threadpool)
         return NULL;
