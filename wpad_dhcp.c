@@ -23,7 +23,7 @@ char *wpad_dhcp_adapter(uint8_t bind_ip[4], net_adapter_s *adapter, int32_t time
 #endif
     if (!wpad)
         return wpad_dhcp_adapter_posix(bind_ip, adapter, timeout_sec);
-    return NULL;
+    return wpad;
 }
 
 typedef struct wpad_dhcp_adapter_enum_s {
