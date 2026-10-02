@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -23,9 +24,17 @@ char *wpad_dhcp_adapter_mac(uint8_t bind_ip[4], net_adapter_s *adapter, int32_t 
 
     // Get the WPAD url from the DHCP server
     dhcp_wpad_url = DHCPInfoGetOptionData(dhcp_info, 252);
-    if (dhcp_wpad_url)
-        wpad = strdup((const char *)CFDataGetBytePtr(dhcp_wpad_url));
+    if (dhcp_wpad_url) {
+        // Option data is length delimited and may not be NUL terminated
+        wpad = strndup((const char *)CFDataGetBytePtr(dhcp_wpad_url), (size_t)CFDataGetLength(dhcp_wpad_url));
+    }
     CFRelease(dhcp_info);
+
+    // Ignore empty url so callers can fallback to other discovery methods
+    if (wpad && !*wpad) {
+        free(wpad);
+        wpad = NULL;
+    }
     return wpad;
 #else
     UNUSED(bind_ip);
