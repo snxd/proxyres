@@ -29,6 +29,7 @@ char *wpad_dhcp_adapter(uint8_t bind_ip[4], net_adapter_s *adapter, int32_t time
 typedef struct wpad_dhcp_adapter_enum_s {
     char *url;
     int32_t timeout_sec;
+    bool query_primary;
 } wpad_dhcp_adapter_enum_s;
 
 static bool wpad_dhcp_enum_adapter(void *user_data, net_adapter_s *adapter) {
@@ -36,6 +37,9 @@ static bool wpad_dhcp_enum_adapter(void *user_data, net_adapter_s *adapter) {
 
     // Check adapter is connected
     if (!adapter->is_connected)
+        return true;
+    // Check adapter is the one being queried in this enumeration
+    if (adapter->is_primary != adapter_enum->query_primary)
         return true;
 #ifdef _WIN32
     // Only Windows supports DHCPv4 detection
@@ -55,10 +59,16 @@ static bool wpad_dhcp_enum_adapter(void *user_data, net_adapter_s *adapter) {
 }
 
 char *wpad_dhcp(int32_t timeout_sec) {
-    wpad_dhcp_adapter_enum_s adapter_enum = {NULL, timeout_sec};
+    wpad_dhcp_adapter_enum_s adapter_enum = {NULL, timeout_sec, true};
 
-    // Enumerate each network adapter and send DHCP request for WPAD
+    // Query the primary adapter first since it carries proxied traffic
     net_adapter_enum(&adapter_enum, wpad_dhcp_enum_adapter);
+
+    // Fallback to the remaining adapters
+    if (!adapter_enum.url) {
+        adapter_enum.query_primary = false;
+        net_adapter_enum(&adapter_enum, wpad_dhcp_enum_adapter);
+    }
 
     return adapter_enum.url;
 }
