@@ -117,11 +117,15 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
         // Populate adapter dns servers
         dns_address = adapter_addresses->FirstDnsServerAddress;
         while (dns_address) {
-            if (*adapter.primary_dns == 0) {
-                memcpy(adapter.primary_dns, &dns_address->Address.lpSockaddr->sa_data[2], sizeof(adapter.primary_dns));
-            } else if (*adapter.secondary_dns == 0) {
-                memcpy(adapter.secondary_dns, &dns_address->Address.lpSockaddr->sa_data[2],
-                       sizeof(adapter.secondary_dns));
+            // Only IPv4 addresses fit in the dns server fields
+            if (dns_address->Address.lpSockaddr->sa_family == AF_INET) {
+                if (*adapter.primary_dns == 0) {
+                    memcpy(adapter.primary_dns, &dns_address->Address.lpSockaddr->sa_data[2],
+                           sizeof(adapter.primary_dns));
+                } else if (*adapter.secondary_dns == 0) {
+                    memcpy(adapter.secondary_dns, &dns_address->Address.lpSockaddr->sa_data[2],
+                           sizeof(adapter.secondary_dns));
+                }
             }
             dns_address = dns_address->Next;
         }
@@ -129,9 +133,12 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
         // Populate adapter gateway
         gateway_address = adapter_addresses->FirstGatewayAddress;
         while (gateway_address) {
-            memcpy(adapter.gateway, &gateway_address->Address.lpSockaddr->sa_data[2], sizeof(adapter.gateway));
+            // Use the first IPv4 gateway since IPv6 gateways are often listed first
+            if (gateway_address->Address.lpSockaddr->sa_family == AF_INET) {
+                memcpy(adapter.gateway, &gateway_address->Address.lpSockaddr->sa_data[2], sizeof(adapter.gateway));
+                break;
+            }
             gateway_address = gateway_address->Next;
-            break;
         }
 
         if (!callback(user_data, &adapter))
