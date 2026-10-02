@@ -14,6 +14,24 @@
 #include "net_adapter.h"
 #include "util_win.h"
 
+#if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+// Get the interface carrying the best IPv4 route to the internet
+static NET_LUID net_adapter_primary_luid(void) {
+    SOCKADDR_INET destination = {{0}};
+    SOCKADDR_INET source = {{0}};
+    MIB_IPFORWARD_ROW2 route = {{0}};
+    NET_LUID luid = {0};
+
+    // Any public address works since only the route is looked up
+    destination.Ipv4.sin_family = AF_INET;
+    destination.Ipv4.sin_addr.s_addr = htonl(0x08080808);
+
+    if (GetBestRoute2(NULL, 0, NULL, &destination, 0, &route, &source) == NO_ERROR)
+        luid = route.InterfaceLuid;
+    return luid;
+}
+#endif
+
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     IP_ADAPTER_ADDRESSES *adapter_addresses = NULL;
     IP_ADAPTER_GATEWAY_ADDRESS *gateway_address = NULL;
@@ -24,10 +42,15 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     ULONG required_size = 0;
     ULONG error = 0;
     net_adapter_s adapter = {{0}};
+    NET_LUID primary_luid = {0};
     uint8_t *buffer = NULL;
 
     if (!callback)
         return false;
+
+#if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+    primary_luid = net_adapter_primary_luid();
+#endif
 
     error = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_INCLUDE_GATEWAYS, 0, NULL, &buffer_size);
     if (error != ERROR_SUCCESS && error != ERROR_BUFFER_OVERFLOW) {
@@ -66,6 +89,8 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
         // Populate connection state
         if (adapter_addresses->OperStatus == IfOperStatusUp)
             adapter.is_connected = true;
+        if (primary_luid.Value && adapter_addresses->Luid.Value == primary_luid.Value)
+            adapter.is_primary = true;
         if (adapter_addresses->Flags & IP_ADAPTER_DHCP_ENABLED && adapter_addresses->Dhcpv4Enabled &&
             adapter_addresses->Dhcpv4Server.iSockaddrLength >= (int32_t)sizeof(adapter.dhcp))
             adapter.is_dhcp_v4 = true;

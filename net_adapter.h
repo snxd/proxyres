@@ -19,6 +19,7 @@ typedef struct net_adapter_s {
     uint8_t mac[8];
     uint8_t mac_length;
     bool is_connected;
+    bool is_primary;
     bool is_dhcp_v4;
     bool is_ipv6;
 } net_adapter_s;
