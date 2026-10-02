@@ -12,7 +12,9 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <net/if.h>
 #ifdef HAVE_NET_IF_ARP_H
@@ -23,6 +25,7 @@
 #endif
 #include <sys/ioctl.h>
 #include <net/route.h>
+#include <linux/rtnetlink.h>
 
 #include "log.h"
 #include "net_adapter.h"
@@ -68,13 +71,65 @@ static bool net_adapter_get_gateway(const char *if_name, uint8_t gateway[4]) {
     return found;
 }
 
+// Get the interface carrying the best IPv4 route to the internet
+static uint32_t net_adapter_primary_index(void) {
+    struct {
+        struct nlmsghdr hdr;
+        struct rtmsg msg;
+        struct rtattr dst_attr;
+        uint32_t dst;
+    } request = {{0}};
+    struct {
+        struct nlmsghdr hdr;
+        uint8_t data[4096];
+    } reply = {{0}};
+    struct timeval timeout = {1, 0};
+    uint32_t index = 0;
+    ssize_t len = 0;
+
+    int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+    if (fd == -1)
+        return 0;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    request.hdr.nlmsg_len = sizeof(request);
+    request.hdr.nlmsg_type = RTM_GETROUTE;
+    request.hdr.nlmsg_flags = NLM_F_REQUEST;
+    request.msg.rtm_family = AF_INET;
+    request.msg.rtm_dst_len = 32;
+
+    // Any public address works since only the route is looked up
+    request.dst_attr.rta_type = RTA_DST;
+    request.dst_attr.rta_len = RTA_LENGTH(sizeof(request.dst));
+    request.dst = htonl(0x08080808);
+
+    if (send(fd, &request, request.hdr.nlmsg_len, 0) == (ssize_t)request.hdr.nlmsg_len)
+        len = recv(fd, &reply, sizeof(reply), 0);
+    close(fd);
+
+    if (len <= 0 || !NLMSG_OK(&reply.hdr, len) || reply.hdr.nlmsg_type != RTM_NEWROUTE)
+        return 0;
+
+    // Find the outgoing interface of the route
+    struct rtmsg *route = (struct rtmsg *)NLMSG_DATA(&reply.hdr);
+    int32_t attr_len = RTM_PAYLOAD(&reply.hdr);
+    for (struct rtattr *attr = RTM_RTA(route); RTA_OK(attr, attr_len); attr = RTA_NEXT(attr, attr_len)) {
+        if (attr->rta_type == RTA_OIF)
+            memcpy(&index, RTA_DATA(attr), sizeof(index));
+    }
+    return index;
+}
+
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     net_adapter_s adapter;
     struct ifaddrs *ifp = NULL;
     struct ifaddrs *ifa = NULL;
+    uint32_t primary_index = 0;
 
     if (getifaddrs(&ifp) == -1)
         return false;
+
+    primary_index = net_adapter_primary_index();
 
     for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr)
@@ -116,6 +171,9 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
         } else {
             strncat(adapter.name, ifa->ifa_name, sizeof(adapter.name) - 1);
         }
+
+        if (primary_index && if_nametoindex(ifa->ifa_name) == primary_index)
+            adapter.is_primary = true;
 
         if (ifa->ifa_addr->sa_family == AF_INET) {
             memcpy(adapter.ip, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, sizeof(adapter.ip));
