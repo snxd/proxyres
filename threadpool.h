@@ -8,17 +8,18 @@ extern "C" {
 #define THREADPOOL_DEFAULT_MAX_THREADS 3
 
 typedef void (*threadpool_job_cb)(void *user_data);
+typedef struct threadpool_s threadpool_s;
 
 // Add a job to the thread pool.
-bool threadpool_enqueue(void *ctx, void *user_data, threadpool_job_cb callback);
+bool threadpool_enqueue(threadpool_s *ctx, void *user_data, threadpool_job_cb callback);
 // Wait for thread pool to finish all jobs.
-void threadpool_wait(void *ctx);
+void threadpool_wait(threadpool_s *ctx);
 
 // Create a thread pool instance.
-void *threadpool_create(int32_t min_threads, int32_t max_threads);
+threadpool_s *threadpool_create(int32_t min_threads, int32_t max_threads);
 
 // Deletes a thread pool instance.
-bool threadpool_delete(void **ctx);
+bool threadpool_delete(threadpool_s **ctx);
 
 #ifdef __cplusplus
 }
