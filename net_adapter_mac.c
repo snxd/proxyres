@@ -16,12 +16,91 @@
 #  define ARPHRD_IEEE802 6  // Token-ring hardware format
 #endif
 #include <net/if_dl.h>
+#include <net/route.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/sysctl.h>
 
 #include "log.h"
 #include "net_adapter.h"
 #include "util.h"
 #include "util_win.h"
+
+// Round up socket address length to the alignment used in routing messages
+#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+
+// Get the IPv4 gateway of a routing message if it is an IPv4 default route
+static struct sockaddr_in *net_adapter_route_gateway(struct rt_msghdr *rtm) {
+    struct sockaddr *addrs[RTAX_MAX] = {0};
+    char *sa = (char *)(rtm + 1);
+
+    // Collect socket addresses that follow the message header
+    for (int32_t i = 0; i < RTAX_MAX; i++) {
+        if (rtm->rtm_addrs & (1 << i)) {
+            addrs[i] = (struct sockaddr *)sa;
+            sa += ROUNDUP(addrs[i]->sa_len);
+        }
+    }
+
+    struct sockaddr_in *dst = (struct sockaddr_in *)addrs[RTAX_DST];
+    struct sockaddr_in *gw = (struct sockaddr_in *)addrs[RTAX_GATEWAY];
+    struct sockaddr_in mask = {0};
+
+    // Host routes have no netmask and are never default routes
+    if (rtm->rtm_flags & RTF_HOST)
+        return NULL;
+
+    // Netmask may be truncated to its non-zero bytes
+    if (addrs[RTAX_NETMASK]) {
+        size_t mask_len = addrs[RTAX_NETMASK]->sa_len;
+        memcpy(&mask, addrs[RTAX_NETMASK], mask_len < sizeof(mask) ? mask_len : sizeof(mask));
+    }
+
+    // Only use default routes with an IPv4 gateway
+    if (!dst || dst->sin_family != AF_INET || dst->sin_addr.s_addr != INADDR_ANY)
+        return NULL;
+    if (mask.sin_addr.s_addr != INADDR_ANY)
+        return NULL;
+    if (!gw || gw->sin_family != AF_INET)
+        return NULL;
+    return gw;
+}
+
+// Get the IPv4 default gateway for an interface from the routing table
+static bool net_adapter_get_gateway(uint32_t if_index, uint8_t gateway[4]) {
+    int mib[6] = {CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_GATEWAY};
+    size_t buffer_len = 0;
+    char *buffer = NULL;
+    bool found = false;
+
+    if (sysctl(mib, 6, NULL, &buffer_len, NULL, 0) < 0 || !buffer_len)
+        return false;
+    buffer = (char *)malloc(buffer_len);
+    if (!buffer)
+        return false;
+    if (sysctl(mib, 6, buffer, &buffer_len, NULL, 0) < 0)
+        buffer_len = 0;
+
+    for (char *next = buffer; !found && next < buffer + buffer_len;) {
+        struct rt_msghdr *rtm = (struct rt_msghdr *)next;
+
+        if (!rtm->rtm_msglen)
+            break;
+        next += rtm->rtm_msglen;
+        if (rtm->rtm_version != RTM_VERSION || rtm->rtm_index != if_index || !(rtm->rtm_flags & RTF_UP))
+            continue;
+
+        struct sockaddr_in *gw = net_adapter_route_gateway(rtm);
+        if (!gw)
+            continue;
+
+        memcpy(gateway, &gw->sin_addr, sizeof(gw->sin_addr));
+        found = true;
+    }
+
+    free(buffer);
+    return found;
+}
 
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     net_adapter_s adapter;
@@ -79,7 +158,7 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
         if (ifa->ifa_addr->sa_family == AF_INET) {
             memcpy(adapter.ip, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, sizeof(adapter.ip));
-            memcpy(adapter.gateway, &((struct sockaddr_in *)ifa->ifa_broadaddr)->sin_addr, sizeof(adapter.gateway));
+            net_adapter_get_gateway((uint32_t)mib[5], adapter.gateway);
             memcpy(adapter.netmask, &((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr, sizeof(adapter.netmask));
         } else if (ifa->ifa_addr->sa_family == AF_INET6) {
             memcpy(adapter.ipv6, &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, sizeof(adapter.ipv6));
