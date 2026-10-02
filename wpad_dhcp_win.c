@@ -29,7 +29,7 @@ char *wpad_dhcp_adapter_win(uint8_t bind_ip[4], net_adapter_s *adapter, int32_t 
                                   request_params, buffer, &buffer_len, NULL);
     free(adapter_guid_wide);
 
-    if (err != NO_ERROR || wpad_params.nBytesData) {
+    if (err != NO_ERROR || !wpad_params.nBytesData) {
         log_debug("Error requesting WPAD from DHCP server (%d)", err);
         return NULL;
     }
