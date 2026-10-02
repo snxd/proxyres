@@ -22,11 +22,51 @@
 #  define ARPHRD_IEEE802 6  // IEEE 802.2 Ethernet/TR/TB
 #endif
 #include <sys/ioctl.h>
+#include <net/route.h>
 
 #include "log.h"
 #include "net_adapter.h"
 #include "util.h"
 #include "util_win.h"
+
+// Get the IPv4 default gateway for an interface from the routing table
+static bool net_adapter_get_gateway(const char *if_name, uint8_t gateway[4]) {
+    char line[256];
+    char name[IF_NAMESIZE];
+    unsigned int dst = 0, gw = 0, flags = 0, mask = 0;
+    int metric = 0, best_metric = 0;
+    bool found = false;
+
+    FILE *fp = fopen("/proc/net/route", "r");
+    if (!fp)
+        return false;
+
+    // Skip the header line
+    if (!fgets(line, sizeof(line), fp)) {
+        fclose(fp);
+        return false;
+    }
+
+    while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%15s %x %x %x %*d %*u %d %x", name, &dst, &gw, &flags, &metric, &mask) != 6)
+            continue;
+        if (strcmp(name, if_name) != 0 || dst != 0 || mask != 0)
+            continue;
+        if ((flags & (RTF_UP | RTF_GATEWAY)) != (RTF_UP | RTF_GATEWAY))
+            continue;
+        // Use the default route with the lowest metric
+        if (found && metric >= best_metric)
+            continue;
+
+        // Parsed value keeps network byte order
+        memcpy(gateway, &gw, sizeof(gw));
+        best_metric = metric;
+        found = true;
+    }
+
+    fclose(fp);
+    return found;
+}
 
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     net_adapter_s adapter;
@@ -79,7 +119,7 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
         if (ifa->ifa_addr->sa_family == AF_INET) {
             memcpy(adapter.ip, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, sizeof(adapter.ip));
-            memcpy(adapter.gateway, &((struct sockaddr_in *)ifa->ifa_broadaddr)->sin_addr, sizeof(adapter.gateway));
+            net_adapter_get_gateway(ifa->ifa_name, adapter.gateway);
             memcpy(adapter.netmask, &((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr, sizeof(adapter.netmask));
         } else if (ifa->ifa_addr->sa_family == AF_INET6) {
             memcpy(adapter.ipv6, &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, sizeof(adapter.ipv6));
