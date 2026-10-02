@@ -20,6 +20,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include "log.h"
 #include "net_adapter.h"
@@ -102,6 +104,47 @@ static bool net_adapter_get_gateway(uint32_t if_index, uint8_t gateway[4]) {
     return found;
 }
 
+// Get the interface carrying the best IPv4 route to the internet
+static uint32_t net_adapter_primary_index(void) {
+    struct {
+        struct rt_msghdr hdr;
+        uint8_t data[512];
+    } msg = {{0}};
+    struct sockaddr_in *dst = (struct sockaddr_in *)msg.data;
+    struct timeval timeout = {1, 0};
+    const pid_t pid = getpid();
+    ssize_t len = 0;
+
+    int fd = socket(PF_ROUTE, SOCK_RAW, AF_INET);
+    if (fd == -1)
+        return 0;
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    msg.hdr.rtm_msglen = sizeof(msg.hdr) + sizeof(*dst);
+    msg.hdr.rtm_version = RTM_VERSION;
+    msg.hdr.rtm_type = RTM_GET;
+    msg.hdr.rtm_addrs = RTA_DST;
+    msg.hdr.rtm_pid = pid;
+    msg.hdr.rtm_seq = 1;
+
+    // Any public address works since only the route is looked up
+    dst->sin_len = sizeof(*dst);
+    dst->sin_family = AF_INET;
+    dst->sin_addr.s_addr = htonl(0x08080808);
+
+    if (write(fd, &msg, msg.hdr.rtm_msglen) == msg.hdr.rtm_msglen) {
+        // Skip messages meant for other routing socket listeners
+        do {
+            len = read(fd, &msg, sizeof(msg));
+        } while (len > 0 && (msg.hdr.rtm_pid != pid || msg.hdr.rtm_seq != 1));
+    }
+    close(fd);
+
+    if (len <= 0 || msg.hdr.rtm_errno)
+        return 0;
+    return msg.hdr.rtm_index;
+}
+
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     net_adapter_s adapter;
     struct ifaddrs *ifp = NULL;
@@ -109,9 +152,12 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     char *buffer = NULL;
     size_t buffer_len = 0;
     size_t required_len = 0;
+    uint32_t primary_index = 0;
 
     if (getifaddrs(&ifp) == -1)
         return false;
+
+    primary_index = net_adapter_primary_index();
 
     for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr)
@@ -151,6 +197,8 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
         if (ifm->ifm_flags & IFF_UP)
             adapter.is_connected = true;
+        // Interface indexes start at 1 so a failed route lookup never matches
+        adapter.is_primary = ifm->ifm_index == primary_index;
 
         strncat(adapter.name, ifa->ifa_name, sizeof(adapter.name) - 1);
         adapter.mac_length = 6;
