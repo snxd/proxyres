@@ -1,0 +1,65 @@
+name: Build - iOS
+on: [workflow_dispatch, pull_request]
+env:
+  TERM: xterm-256color
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Build - iOS Simulator
+            runs-on: macos-latest
+            cmake-args: >-
+              -D CMAKE_SYSTEM_NAME=iOS
+              -D CMAKE_OSX_SYSROOT=iphonesimulator
+              -D CMAKE_OSX_ARCHITECTURES=arm64
+              -D CMAKE_OSX_DEPLOYMENT_TARGET=15.0
+
+    steps:
+    - name: Install dependencies
+      run: brew install ninja
+
+    - name: Checkout repository
+      uses: actions/checkout@v7
+
+    # Ninja keeps test paths free of the Xcode generator's unexpanded platform name
+    - name: Generate project
+      run: |
+        cmake -S . -B build -G Ninja ${{ matrix.cmake-args }} \
+          -D CMAKE_BUILD_TYPE=RelWithDebInfo \
+          -D BUILD_SHARED_LIBS=OFF \
+          "-D CMAKE_CROSSCOMPILING_EMULATOR=xcrun;simctl;spawn;booted"
+
+    - name: Build project
+      run: cmake --build build --config RelWithDebInfo
+
+    - name: Boot simulator
+      run: |
+        udid=$(xcrun simctl list devices available --json | jq -r \
+          '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+        echo "Booting simulator $udid"
+        xcrun simctl bootstatus "$udid" -b
+
+    # Tests run inside the booted simulator through the cross-compiling emulator
+    - name: Run tests
+      run: ctest --verbose -C RelWithDebInfo
+      working-directory: build
+
+    - name: Upload build errors
+      uses: actions/upload-artifact@v7
+      if: failure()
+      with:
+        name: Build Errors - ${{ matrix.name }}
+        path: |
+          **/CMakeFiles/CMakeOutput.log
+          **/CMakeFiles/CMakeError.log
+          **/Testing/Temporary/LastTest.log
+          **/*.log
+        retention-days: 3
