@@ -16,7 +16,9 @@
 #  define ARPHRD_IEEE802 6  // Token-ring hardware format
 #endif
 #include <net/if_dl.h>
-#include <net/route.h>
+#ifdef HAVE_NET_ROUTE_H
+#  include <net/route.h>
+#endif
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/sysctl.h>
@@ -28,8 +30,10 @@
 #include "util.h"
 #include "util_win.h"
 
+// The iOS SDK does not ship the routing table header
+#ifdef HAVE_NET_ROUTE_H
 // Round up socket address length to the alignment used in routing messages
-#define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
+#  define ROUNDUP(a) ((a) > 0 ? (1 + (((a) - 1) | (sizeof(uint32_t) - 1))) : sizeof(uint32_t))
 
 // Get the IPv4 gateway of a routing message if it is an IPv4 default route
 static struct sockaddr_in *net_adapter_route_gateway(struct rt_msghdr *rtm) {
@@ -144,6 +148,7 @@ static uint32_t net_adapter_primary_index(void) {
         return 0;
     return msg.hdr.rtm_index;
 }
+#endif
 
 bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     net_adapter_s adapter;
@@ -157,7 +162,9 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
     if (getifaddrs(&ifp) == -1)
         return false;
 
+#ifdef HAVE_NET_ROUTE_H
     primary_index = net_adapter_primary_index();
+#endif
 
     for (ifa = ifp; ifa; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr)
@@ -206,7 +213,9 @@ bool net_adapter_enum(void *user_data, net_adapter_cb callback) {
 
         if (ifa->ifa_addr->sa_family == AF_INET) {
             memcpy(adapter.ip, &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr, sizeof(adapter.ip));
+#ifdef HAVE_NET_ROUTE_H
             net_adapter_get_gateway((uint32_t)mib[5], adapter.gateway);
+#endif
             memcpy(adapter.netmask, &((struct sockaddr_in *)ifa->ifa_netmask)->sin_addr, sizeof(adapter.netmask));
         } else if (ifa->ifa_addr->sa_family == AF_INET6) {
             memcpy(adapter.ipv6, &((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr, sizeof(adapter.ipv6));
