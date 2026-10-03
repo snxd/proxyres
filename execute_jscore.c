@@ -353,8 +353,9 @@ int32_t proxy_execute_jscore_get_error(void *ctx) {
 
 void proxy_execute_jscore_delayed_init(void) {
 #ifdef __APPLE__
-    g_proxy_execute_jscore.module = dlopen(
-        "/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/JavaScriptCore", RTLD_LAZY | RTLD_LOCAL);
+    // iOS frameworks have no Versions directory so use the path shared with macOS
+    g_proxy_execute_jscore.module =
+        dlopen("/System/Library/Frameworks/JavaScriptCore.framework/JavaScriptCore", RTLD_LAZY | RTLD_LOCAL);
 #else
     const char *library_names[] = {"libjavascriptcoregtk-4.1.so.0", "libjavascriptcoregtk-4.0.so.18",
                                    "libjavascriptcoregtk-3.0.so.0", "libjavascriptcoregtk-1.0.so.0"};
