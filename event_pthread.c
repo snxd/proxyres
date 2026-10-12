@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <pthread.h>
 
@@ -39,8 +40,15 @@ bool event_wait(void *ctx, int32_t timeout_ms) {
         } else {
             struct timespec ts;
 
-            ts.tv_sec = timeout_ms / 1000;
-            ts.tv_nsec = (timeout_ms % 1000) * 1000000;
+            // pthread_cond_timedwait expects an ABSOLUTE deadline (CLOCK_REALTIME),
+            // not a relative timeout. Use now + timeout_ms, normalizing nsec overflow.
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += timeout_ms / 1000;
+            ts.tv_nsec += (timeout_ms % 1000) * 1000000;
+            if (ts.tv_nsec >= 1000000000) {
+                ts.tv_sec += 1;
+                ts.tv_nsec -= 1000000000;
+            }
 
             err = pthread_cond_timedwait(&event->cond, &event->mutex, &ts);
         }
