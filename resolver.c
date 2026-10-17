@@ -16,7 +16,8 @@
 #include "resolver.h"
 #include "resolver_i.h"
 // Posix resolver evaluates the PAC script using our own JavaScript engine
-#if defined(PROXYRES_EXECUTE) && (defined(__linux__) || defined(HAVE_DUKTAPE))
+#if defined(PROXYRES_EXECUTE) && \
+    (defined(__linux__) || defined(HAVE_DUKTAPE) || (defined(__APPLE__) && defined(PROXYRES_EXECUTE_PAC)))
 #  define USE_POSIX_RESOLVER
 #  include "execute.h"
 #  include "resolver_posix.h"
@@ -255,11 +256,13 @@ bool proxy_resolver_global_init(void) {
     if (!proxy_config_global_init())
         return false;
 #ifdef USE_POSIX_RESOLVER
+    // Prefer our own engine. On Apple, CFNetwork ignores the HTTPS proxy keyword (FB11699086).
     if (proxy_execute_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
 #endif
 #if defined(__APPLE__)
 #  if !defined(HAVE_DUKTAPE)
+    // Fallback to the native CFNetwork resolver
     if (!g_proxy_resolver.proxy_resolver_i && proxy_resolver_mac_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_mac_get_interface();
 #  endif

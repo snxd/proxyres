@@ -50,6 +50,7 @@ ctest --verbose -C Debug
 |PROXYRES_CURL|Enables downloading PAC scripts using [curl](https://github.com/curl/curl). Without this option set, PAC scripts will only be downloaded using HTTP 1.0.|OFF|
 |PROXYRES_DUKTAPE|Build with Duktape JavaScript engine for PAC script execution.|OFF|
 |PROXYRES_EXECUTE|Enables support for PAC script execution. Required on Linux due to the lack of a system level proxy resolver.|ON|
+|PROXYRES_CFNETWORK|On Apple, use the native CFNetwork PAC resolver. Set to `OFF` to resolve PAC with the JavaScript engine instead, which honors the `HTTPS` proxy keyword that CFNetwork ignores. PAC downloads then follow the app's App Transport Security policy, so `http` PAC and WPAD urls may need an ATS exception.|ON|
 |PROXYRES_BUILD_CLI|Build command line utility.|ON|
 |PROXYRES_BUILD_TESTS|Build Googletest unit tests project.|ON|
 |PROXYRES_CODE_COVERAGE|Build for code coverage.|OFF|

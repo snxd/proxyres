@@ -22,6 +22,15 @@ jobs:
               -D CMAKE_OSX_ARCHITECTURES=arm64
               -D CMAKE_OSX_DEPLOYMENT_TARGET=15.0
 
+          - name: Build - iOS Simulator (JavaScriptCore)
+            runs-on: macos-latest
+            cmake-args: >-
+              -D CMAKE_SYSTEM_NAME=iOS
+              -D CMAKE_OSX_SYSROOT=iphonesimulator
+              -D CMAKE_OSX_ARCHITECTURES=arm64
+              -D CMAKE_OSX_DEPLOYMENT_TARGET=15.0
+              -D PROXYRES_CFNETWORK=OFF
+
     steps:
     - name: Install dependencies
       run: brew install ninja

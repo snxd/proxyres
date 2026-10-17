@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +10,7 @@
 
 TEST(fetch, get) {
     int32_t error = 0;
-#ifdef HAVE_CURL
+#if defined(HAVE_CURL) || defined(PROXYRES_EXECUTE_PAC)
     const char *url = "https://google.com/";
     const char *expected_string = "world's information";
 #else
@@ -24,3 +25,14 @@ TEST(fetch, get) {
         free(body);
     }
 }
+
+#if defined(PROXYRES_EXECUTE_PAC) && !defined(HAVE_CURL)
+TEST(fetch, rejects_non_http_scheme) {
+    const char *urls[] = {"file:///etc/hosts", "data:text/plain,DIRECT", "ftp://example.com/proxy.pac", "not a url"};
+    for (const char *url : urls) {
+        int32_t error = 0;
+        EXPECT_EQ(fetch_get(url, &error), nullptr) << url;
+        EXPECT_EQ(error, EINVAL) << url;
+    }
+}
+#endif

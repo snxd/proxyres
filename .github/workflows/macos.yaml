@@ -27,6 +27,21 @@ jobs:
             cxx-compiler: clang++
             cmake-args: -G Xcode -D PROXYRES_CODE_COVERAGE=ON -D PROXYRES_DUKTAPE=ON
             codecov: macos_duktape
+            https-pac: true
+
+          - name: Build - macOS Xcode (JavaScriptCore)
+            runs-on: macos-latest
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Xcode -D PROXYRES_CFNETWORK=OFF
+            https-pac: true
+
+          - name: Build - macOS Xcode (duktape, CFNetwork off)
+            runs-on: macos-latest
+            compiler: clang
+            cxx-compiler: clang++
+            cmake-args: -G Xcode -D PROXYRES_DUKTAPE=ON -D PROXYRES_CFNETWORK=OFF
+            https-pac: true
 
     steps:
     - name: Checkout repository
@@ -176,6 +191,20 @@ jobs:
           echo "Proxy for https://multi-legacy.com/ set successfully"
         else
           echo "Proxy for https://multi-legacy.com/ set failed"
+          exit 1
+        fi
+      working-directory: build/test/RelWithDebInfo
+
+    - name: Check HTTPS proxy resolution (networksetup)
+      if: matrix.https-pac
+      shell: bash
+      run: |
+        out=$(./proxycli resolve https://multi.com/)
+        echo "Proxy for https://multi.com/: $out"
+        if [ "$out" = "https://some-such-proxy:443,https://any-such-proxy:41" ]; then
+          echo "Proxy for https://multi.com/ set successfully"
+        else
+          echo "Proxy for https://multi.com/ set failed"
           exit 1
         fi
       working-directory: build/test/RelWithDebInfo
