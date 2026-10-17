@@ -177,6 +177,8 @@ bool threadpool_delete(void **ctx) {
     threadpool_s *threadpool = (threadpool_s *)*ctx;
     if (!threadpool)
         return false;
+    // Wait for jobs to finish, since their callbacks reference the pool
+    threadpool_wait(threadpool);
     if (threadpool->handle)
         CloseThreadpool(threadpool->handle);
     mutex_delete(&threadpool->queue_lock);

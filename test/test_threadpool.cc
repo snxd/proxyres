@@ -3,8 +3,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <chrono>
+#include <thread>
+
 #include <gtest/gtest.h>
 
+#include "event.h"
 #include "threadpool.h"
 
 TEST(threadpool, create) {
@@ -46,4 +50,29 @@ TEST(threadpool, run_many) {
         EXPECT_TRUE(job_was_run[i]);
     EXPECT_TRUE(threadpool_delete(&pool));
     ASSERT_EQ(pool, nullptr);
+}
+
+typedef struct threadpool_delete_job_s {
+    void *started;
+    bool finished;
+} threadpool_delete_job_s;
+
+static void threadpool_delete_worker(void *arg) {
+    threadpool_delete_job_s *job = (threadpool_delete_job_s *)arg;
+    event_set(job->started);
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    job->finished = true;
+}
+
+TEST(threadpool, delete_waits_for_running_job) {
+    threadpool_delete_job_s job = {event_create(), false};
+    ASSERT_NE(job.started, nullptr);
+    void *pool = threadpool_create(1, 1);
+    ASSERT_NE(pool, nullptr);
+    EXPECT_TRUE(threadpool_enqueue(pool, &job, threadpool_delete_worker));
+    // Delete while the job is still running
+    EXPECT_TRUE(event_wait(job.started, 5000));
+    EXPECT_TRUE(threadpool_delete(&pool));
+    EXPECT_TRUE(job.finished);
+    event_delete(&job.started);
 }
