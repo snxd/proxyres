@@ -255,8 +255,10 @@ bool proxy_resolver_posix_init_ex(void *threadpool) {
     if (!g_proxy_resolver_posix.mutex)
         return false;
 
-    if (!fetch_global_init())
-        return proxy_resolver_posix_global_cleanup();
+    if (!fetch_global_init()) {
+        proxy_resolver_posix_global_cleanup();
+        return false;
+    }
 
     // Start WPAD discovery process immediately
     if (threadpool && proxy_config_get_auto_discover())
