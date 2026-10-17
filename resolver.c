@@ -12,27 +12,23 @@
 #endif
 
 #include "config.h"
-#if defined(__linux__) || defined(HAVE_DUKTAPE)
-#  include "execute.h"
-#endif
 #include "log.h"
 #include "resolver.h"
 #include "resolver_i.h"
+// Posix resolver evaluates the PAC script using our own JavaScript engine
+#if defined(PROXYRES_EXECUTE) && (defined(__linux__) || defined(HAVE_DUKTAPE))
+#  define USE_POSIX_RESOLVER
+#  include "execute.h"
+#  include "resolver_posix.h"
+#endif
 #if defined(__APPLE__)
-#  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
-#    include "resolver_posix.h"
-#  else
+#  if !defined(HAVE_DUKTAPE)
 #    include "resolver_mac.h"
 #  endif
 #elif defined(__linux__)
 // #  include "resolver_gnome3.h"
-#  ifdef PROXYRES_EXECUTE
-#    include "resolver_posix.h"
-#  endif
-#elif defined(_WIN32)
-#  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
-#    include "resolver_posix.h"
-#  elif WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+#elif defined(_WIN32) && !defined(USE_POSIX_RESOLVER)
+#  if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
 #    include "resolver_winxp.h"
 #    include "resolver_win8.h"
 #  elif WINAPI_FAMILY == WINAPI_FAMILY_PC_APP
@@ -258,27 +254,21 @@ bool proxy_resolver_global_init(void) {
 
     if (!proxy_config_global_init())
         return false;
-#if defined(__APPLE__)
-#  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
+#ifdef USE_POSIX_RESOLVER
     if (proxy_execute_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
-#  else
-    if (proxy_resolver_mac_global_init())
+#endif
+#if defined(__APPLE__)
+#  if !defined(HAVE_DUKTAPE)
+    if (!g_proxy_resolver.proxy_resolver_i && proxy_resolver_mac_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_mac_get_interface();
 #  endif
 #elif defined(__linux__)
     /* Does not work for manually specified proxy auto-config urls
     if (proxy_resolver_gnome3_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_gnome3_get_interface();*/
-#  ifdef PROXYRES_EXECUTE
-    if (proxy_execute_global_init())
-        g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
-#  endif
-#elif defined(_WIN32)
-#  if defined(PROXYRES_EXECUTE) && defined(HAVE_DUKTAPE)
-    if (proxy_execute_global_init())
-        g_proxy_resolver.proxy_resolver_i = proxy_resolver_posix_get_interface();
-#  elif WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
+#elif defined(_WIN32) && !defined(USE_POSIX_RESOLVER)
+#  if WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP
     if (proxy_resolver_win8_global_init())
         g_proxy_resolver.proxy_resolver_i = proxy_resolver_win8_get_interface();
     else if (proxy_resolver_winxp_global_init())
@@ -308,7 +298,7 @@ bool proxy_resolver_global_init(void) {
         return false;
     }
 
-#if defined(__linux__) && defined(PROXYRES_EXECUTE)
+#ifdef USE_POSIX_RESOLVER
     // Pass threadpool to posix resolver to immediately start wpad discovery
     if (g_proxy_resolver.proxy_resolver_i == proxy_resolver_posix_get_interface()) {
         if (!proxy_resolver_posix_init_ex(g_proxy_resolver.threadpool)) {
@@ -334,7 +324,7 @@ bool proxy_resolver_global_cleanup(void) {
         g_proxy_resolver.proxy_resolver_i->global_cleanup();
 
     memset(&g_proxy_resolver, 0, sizeof(g_proxy_resolver));
-#ifdef HAVE_DUKTAPE
+#ifdef USE_POSIX_RESOLVER
     if (!proxy_execute_global_cleanup())
         return false;
 #endif
